@@ -1,0 +1,16 @@
+EXETYPE WINDOWS
+
+EXPORTS
+	get_tool_info_w
+
+	replaceWhiteSpace
+	replaceWhiteSpace_property
+
+	tabSeparatedToHtmlTable
+	tabSeparatedToHtmlTable_property
+
+	save_odbc
+	save_odbc_property
+
+	load_odbc
+	load_odbc_property
