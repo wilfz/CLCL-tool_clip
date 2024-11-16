@@ -151,7 +151,8 @@ __declspec(dllexport) int CALLBACK load_odbc(const HWND hWnd, TOOL_EXEC_INFO* te
 
 	linguversa::Query tree(con);
 	sqlret = tree.Prepare(
-		_T("select title, parent, sort, itemtype, itemformat, formatname, textcontent, modified from clipitem where parent = ?;"));
+		_T("select title, parent, sort, itemtype, itemformat, formatname, textcontent, modified "
+			"from clipitem where parent = ? order by sort;"));
 	if (!SQL_SUCCEEDED(sqlret))
 		return TOOL_ERROR;
 
