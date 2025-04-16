@@ -394,6 +394,8 @@ SQLRETURN load_subtree(const HWND hWnd, DATA_INFO* parent_item, const tstring pa
 				if ((child_item = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_ITEM, (LPARAM)dbi->title.c_str())) == NULL) {
 					return SQL_NO_DATA;
 				}
+				// initialize item's modified time to 0 (otherwise it's current time)
+				child_item->modified.dwHighDateTime = child_item->modified.dwLowDateTime = 0;
 				if (dbi->itemformat == CF_TEXT && (child_item->child = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_DATA, (LPARAM)TEXT("TEXT"))) == NULL) {
 					SendMessage(hWnd, WM_ITEM_FREE, 0, (LPARAM)child_item);
 					return SQL_NO_DATA;
@@ -768,7 +770,10 @@ int sync_db_item(const db_item& dbi, DATA_INFO* item, DATA_INFO* pd)
 				wsdata.assign(ws);
 				GlobalUnlock(pd->data);
 			}
-			if (TimestampStructToFileTime(dbi.modified, dbft) && (cmp = CompareFileTime(&item->modified, &dbft)) != 0 && cmp > 0) {
+			// dbft newer than item->modified ?
+			if (TimestampStructToFileTime(dbi.modified, dbft) && (cmp = CompareFileTime(&dbft, &(item->modified))) != 0 && cmp > 0
+				|| dbft.dwHighDateTime == 0 && dbft.dwLowDateTime == 0) 
+			{
 				// allocate (dbi.textcontent.size() + 1) * sizeof(TCHAR) bytes in pd->data and
 				// copy dbi.textcontent to the allocated memory
 				HGLOBAL ret = NULL;
@@ -794,6 +799,11 @@ int sync_db_item(const db_item& dbi, DATA_INFO* item, DATA_INFO* pd)
 				GlobalFree(pd->data);
 				pd->data = ret;
 				pd->size = (targetlen + 1) * sizeof(TCHAR);
+				if (dbft.dwHighDateTime == 0 && dbft.dwLowDateTime == 0) {
+					TIMESTAMP_STRUCT ts = { 2000, 01, 01, 00, 00, 00, 0 };
+					TimestampStructToFileTime( ts, dbft);
+				};
+				
 				item->modified = dbft;
 			}
 			break;
@@ -816,7 +826,9 @@ int sync_db_item(const db_item& dbi, DATA_INFO* item, DATA_INFO* pd)
 				delete[] ws;
 				GlobalUnlock(pd->data);
 			}
-			if (TimestampStructToFileTime(dbi.modified, dbft) && (cmp = CompareFileTime(&item->modified, &dbft)) != 0 && cmp > 0) {
+
+			// dbft newer than item->modified ?
+			if (TimestampStructToFileTime(dbi.modified, dbft) && (cmp = CompareFileTime(&dbft, &(item->modified))) != 0 && cmp > 0) {
 				// convert dbi.textcontent to multi_byte
 				int len = dbi.textcontent.length() + 1;
 				char* mb = new char[len * 4];
