@@ -138,6 +138,7 @@ int build_html_table(const TCHAR* source, TCHAR* target)
 
 	TCHAR c, d;
 	int i = 0;
+	// skip empty lines
 	while ((c = source[i]) != '\0')
 	{
 		if (c != '\n' && c != '\r')
@@ -191,6 +192,21 @@ int build_html_table(const TCHAR* source, TCHAR* target)
 			tsize += lstrlen(th_open);
 			bTableItem = TRUE;
 			break;
+		case '<':
+			if (target)
+				lstrcpy(target + tsize, TEXT("&lt;"));
+			tsize += lstrlen(TEXT("&lt;"));
+			break;
+		case '>':
+			if (target)
+				lstrcpy(target + tsize, TEXT("&gt;"));
+			tsize += lstrlen(TEXT("&gt;"));
+			break;
+		case '&':
+			if (target)
+				lstrcpy(target + tsize, TEXT("&amp;"));
+			tsize += lstrlen(TEXT("&amp;"));
+			break;
 		default:
 			if (target)
 				target[tsize] = c;
@@ -198,8 +214,9 @@ int build_html_table(const TCHAR* source, TCHAR* target)
 		}
 	}
 
-	if ((c = source[i]) == '\0')
+	if ((c = source[i]) == '\0') // only header, no data rows
 	{
+		// close everything and return
 		if (bTableItem)
 		{
 			if (target)
@@ -207,9 +224,30 @@ int build_html_table(const TCHAR* source, TCHAR* target)
 			tsize += lstrlen(th_close);
 			bTableItem = FALSE;
 		}
+		if (bTableRow)
+		{
+			if (target)
+				lstrcpy(target + tsize, tr_close);
+			tsize += lstrlen(tr_close);
+			bTableRow = FALSE;
+		}
+		if (bTable)
+		{
+			if (target)
+				lstrcpy(target + tsize, table_close);
+			tsize += lstrlen(table_close);
+			bTable = FALSE;
+		}
+
+		if (target)
+			target[tsize] = '\0';
+		tsize++;
+
+		return tsize;
 	}
 	else
 	{
+		// data row follows: open first row, first item
 		if (target)
 			lstrcpy(target + tsize, tr_open);
 		tsize += lstrlen(tr_open);
@@ -230,6 +268,7 @@ int build_html_table(const TCHAR* source, TCHAR* target)
 			else if (c == '\n' && (d = source[i]) == '\r')
 				i++;
 
+			// close the current oitem and row
 			if (bTableItem)
 			{
 				if (target)
@@ -271,6 +310,21 @@ int build_html_table(const TCHAR* source, TCHAR* target)
 			if (target)
 				lstrcpy(target + tsize, td_open);
 			tsize += lstrlen(td_open);
+			break;
+		case '<':
+			if (target)
+				lstrcpy(target + tsize, TEXT("&lt;"));
+			tsize += lstrlen(TEXT("&lt;"));
+			break;
+		case '>':
+			if (target)
+				lstrcpy(target + tsize, TEXT("&gt;"));
+			tsize += lstrlen(TEXT("&gt;"));
+			break;
+		case '&':
+			if (target)
+				lstrcpy(target + tsize, TEXT("&amp;"));
+			tsize += lstrlen(TEXT("&amp;"));
 			break;
 		default:
 			if (target)
