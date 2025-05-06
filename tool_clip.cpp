@@ -6,6 +6,7 @@
 #include <Shlwapi.h>
 
 #include "CLCLPlugin.h"
+#include "resource.h"
 #include "query\lvstring.h"
 
 using namespace std;
@@ -63,28 +64,32 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 {
 	switch (index) {
 	case 0:
-		lstrcpy(tgi->title, TEXT("Replace WhiteSpace"));
+		//lstrcpy(tgi->title, TEXT("Replace WhiteSpace"));
+		LoadString(hInst, IDS_REPLACE_WHITESPACE, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("replaceWhiteSpace"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
 		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE | CALLTYPE_VIEWER;
 		return TRUE;
 
 	case 1:
-		lstrcpy(tgi->title, TEXT("Tab-separated to HTML-table"));
+		//lstrcpy(tgi->title, TEXT("Tab-separated to HTML-table"));
+		LoadString(hInst, IDS_TABSEPERATE_TO_HTML, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("tabSeparatedToHtmlTable"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
 		tgi->call_type = CALLTYPE_MENU | CALLTYPE_VIEWER;
 		return TRUE;
 
 	case 2:
-		lstrcpy(tgi->title, TEXT("Save to database"));
+		//lstrcpy(tgi->title, TEXT("Save to database"));
+		LoadString(hInst, IDS_SAVE_TO_DB, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("save_odbc"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
 		tgi->call_type = CALLTYPE_VIEWER;
 		return TRUE;
 
 	case 3:
-		lstrcpy(tgi->title, TEXT("Load from database"));
+		//lstrcpy(tgi->title, TEXT("Load from database"));
+		LoadString(hInst, IDS_LOAD_FROM_DB, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("load_odbc"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
 		tgi->call_type = CALLTYPE_VIEWER;
