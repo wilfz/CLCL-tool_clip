@@ -93,6 +93,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CLCLPlugin.h" />
+    <ClInclude Include="clipitem.h" />
     <ClInclude Include="memory.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="string.h" />
@@ -102,9 +103,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cliphtml.cpp" />
+    <ClCompile Include="clipitem.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="string.cpp" />
+    <ClCompile Include="text2json.cpp" />
     <ClCompile Include="tool_clip.cpp" />
     <ClCompile Include="whitespace.cpp" />
   </ItemGroup>

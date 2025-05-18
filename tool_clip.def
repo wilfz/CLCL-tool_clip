@@ -14,3 +14,6 @@ EXPORTS
 
 	load_odbc
 	load_odbc_property
+
+	save_json
+	load_json

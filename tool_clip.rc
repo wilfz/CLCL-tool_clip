@@ -13,10 +13,10 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
+// German (Germany) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 #pragma code_page(1252)
 
 #ifdef APSTUDIO_INVOKED
@@ -44,6 +44,170 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_REPLACE_WHITESPACE DIALOGEX 0, 0, 147, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Whitespace ersetzen"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,36,42,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,90,42,50,14
+    EDITTEXT        IDC_EDIT_REPLACEMENT,6,18,135,12,ES_AUTOHSCROLL
+    LTEXT           "ersetzen durch",IDC_STATIC_REPLACEMENT,6,6,42,8
+END
+
+IDD_CONVERT_WHITESPACE DIALOGEX 0, 0, 147, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Replace Whitespace"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,36,42,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,90,42,50,14
+    EDITTEXT        IDC_EDIT_REPLACEMENT,6,18,135,12,ES_AUTOHSCROLL
+    LTEXT           "ersetzen durch",IDC_STATIC_REPLACEMENT,6,6,42,8
+END
+
+IDD_ODBC_SETTINGS DIALOGEX 0, 0, 251, 105
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,144,84,48,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,199,84,47,14
+    CONTROL         "DSN",IDC_IS_DSN,"Button",BS_AUTORADIOBUTTON,6,6,30,10
+    CONTROL         "Verbindungszeichenkette",IDC_IS_CONSTRING,"Button",BS_AUTORADIOBUTTON | BS_MULTILINE,6,18,48,24
+    COMBOBOX        IDC_COMBO_DSN,60,6,186,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT_CONNECTIONSTRING,60,24,186,14,ES_AUTOHSCROLL
+    LTEXT           "Benutzer",IDC_STATIC,6,42,24,8
+    EDITTEXT        IDC_EDIT_USERID,60,42,186,14,ES_AUTOHSCROLL
+    LTEXT           "Passwort",IDC_STATIC,6,60,32,8
+    EDITTEXT        IDC_EDIT_PWD,60,60,186,14,ES_PASSWORD | ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_REPLACE_WHITESPACE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 140
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_CONVERT_WHITESPACE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 140
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_ODBC_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 98
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_REPLACE_WHITESPACE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_CONVERT_WHITESPACE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_ODBC_SETTINGS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040704b0"
+        BEGIN
+            VALUE "CompanyName", "wilfzim"
+            VALUE "FileDescription", "Plugin DLL for CLCL.exe"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "tool_clip.dll"
+            VALUE "LegalCopyright", "Copyright (C) 2024"
+            VALUE "OriginalFilename", "tool_clip.dll"
+            VALUE "ProductName", "ToolClip Plugin for CLCL"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x407, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_REPLACE_WHITESPACE  "Whitespaces ersetzen"
+    IDS_TABSEPERATE_TO_HTML "Tab-getrennt zu HTML-Tabelle"
+    IDS_SAVE_TO_DB          "Speichern in Datenbank"
+    IDS_LOAD_FROM_DB        "Lesen aus Datenbank"
+END
+
+#endif    // German (Germany) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
 
 /////////////////////////////////////////////////////////////////////////////
 //

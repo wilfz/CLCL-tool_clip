@@ -9,7 +9,7 @@
 #include "query\table.h"
 #include "query\lvstring.h"
 #include "query\odbcenvironment.h"
-
+#include "clipitem.h"
 
 extern HINSTANCE hInst;
 extern tstring ini_path;
@@ -51,8 +51,6 @@ public:
 bool init_dialog(HWND hDlg);
 SQLRETURN build_table_clipitem(linguversa::Connection& con);
 tstring create_ancestors(const HWND hWnd, DATA_INFO* di, linguversa::Query& create_folder);
-bool FileTimeToTimestampStruct(const FILETIME ft, TIMESTAMP_STRUCT& ts);
-bool TimestampStructToFileTime(const TIMESTAMP_STRUCT ts, FILETIME& ft);
 int item_to_db(TOOL_DATA_INFO* tdi, tstring parent, linguversa::Query& statement);
 SQLRETURN db_to_item(DATA_INFO* di, const tstring parent, linguversa::Query& select);
 SQLRETURN load_subtree(const HWND hWnd, DATA_INFO* parent_item, const tstring parent_title, linguversa::Query& tree);
@@ -684,45 +682,6 @@ int item_to_db(TOOL_DATA_INFO* tdi, tstring parent, linguversa::Query& statement
 	}
 
 	return TOOL_SUCCEED;
-}
-
-bool FileTimeToTimestampStruct(const FILETIME ft, TIMESTAMP_STRUCT& ts)
-{
-	SYSTEMTIME st;
-	if (ft.dwHighDateTime != 0 && ft.dwLowDateTime != 0
-		&& FileTimeToSystemTime(&ft, &st))
-	{
-		ts.year = st.wYear;
-		ts.month = st.wMonth;
-		ts.day = st.wDay;
-		ts.hour = st.wHour;
-		ts.minute = st.wMinute;
-		ts.second = st.wSecond;
-		ts.fraction = st.wMilliseconds * 1000000; // ts.fraction is nanoseconds
-		return true;
-	}
-
-	ts = { 0,0,0, 0,0,0, 0 };
-	return false;
-}
-
-bool TimestampStructToFileTime(const TIMESTAMP_STRUCT ts, FILETIME& ft)
-{
-	SYSTEMTIME st;
-	if (ts.year > 0 && ts.month > 0 && ts.day > 0) {
-		st.wYear = ts.year;
-		st.wMonth = ts.month;
-		st.wDay = ts.day;
-		st.wHour = ts.hour;
-		st.wMinute = ts.minute;
-		st.wSecond = ts.second;
-		st.wMilliseconds = (WORD)(ts.fraction / 1000000); // ts.fraction is nanoseconds
-		if (SystemTimeToFileTime(&st, &ft))
-			return true;
-	}
-
-	ft.dwHighDateTime = ft.dwLowDateTime = 0;
-	return false;
 }
 
 int sync_db_item(const db_item& dbi, DATA_INFO* item, DATA_INFO* pd)
