@@ -196,6 +196,8 @@ BEGIN
     IDS_TABSEPERATE_TO_HTML "Tab-getrennt zu HTML-Tabelle"
     IDS_SAVE_TO_DB          "Speichern in Datenbank"
     IDS_LOAD_FROM_DB        "Lesen aus Datenbank"
+    IDS_SAVE_TO_JSON        "Speichern als JSON"
+    IDS_LOAD_FROM_JSON      "Laden aus JSON Datei"
 END
 
 #endif    // German (Germany) resources
@@ -360,6 +362,8 @@ BEGIN
     IDS_TABSEPERATE_TO_HTML "Tab-separated to HTML-table"
     IDS_SAVE_TO_DB          "Save to database"
     IDS_LOAD_FROM_DB        "Load from database"
+    IDS_SAVE_TO_JSON        "Save to JSON"
+    IDS_LOAD_FROM_JSON      "Load from JSON"
 END
 
 #endif    // English (United States) resources

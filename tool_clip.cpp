@@ -96,14 +96,16 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 		return TRUE;
 
 	case 4:
-		lstrcpy(tgi->title, TEXT("Save to JSON"));
+		//lstrcpy(tgi->title, TEXT("Save to JSON"));
+		LoadString(hInst, IDS_SAVE_TO_JSON, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("save_json"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
 		tgi->call_type = CALLTYPE_VIEWER;
 		return TRUE;
 
 	case 5:
-		lstrcpy(tgi->title, TEXT("Load from JSON"));
+		//lstrcpy(tgi->title, TEXT("Load from JSON"));
+		LoadString(hInst, IDS_LOAD_FROM_JSON, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("load_json"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
 		tgi->call_type = CALLTYPE_VIEWER;
