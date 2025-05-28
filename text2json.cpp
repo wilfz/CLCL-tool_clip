@@ -6,6 +6,7 @@
 #endif
 #include "memory.h"
 #include "clipitem.h"
+#include "query\lvstring.h"
 
 #include <fstream>
 #include "nlohmann/json.hpp"
@@ -37,15 +38,26 @@ void to_json(json& j, const clip_item& item) {
 	j = json{
 		{"title", title},
 		{"itemtype", item.itemtype },
-		{"itemformat", item.itemformat},
+		{"dataformat", item.itemformat},
 		{"formatname", formatname},
 		{"textcontent", textcontent },
 		{"children", item.children },
-		{"modified", ts }
+		{"modified", ts },
+		{"op_modifiers", item.op_modifiers},
+		{"op_virtkey", item.op_virtkey},
+		{"op_paste", item.op_paste}
 	};
 }
 
 void from_json(const json& j, clip_item& item) {
+	// Check if j is an array.
+	// If so then create an empty item and load the array to children.
+	if (j.is_array()) {
+		item.itemtype = TYPE_ROOT;
+		j.get_to(item.children);
+		return;
+	}
+
 	// local UTF-8 interim variables
 	string title;
 	string formatname;
@@ -54,11 +66,14 @@ void from_json(const json& j, clip_item& item) {
 
 	j.at("title").get_to(title);
 	j.at("itemtype").get_to(item.itemtype);
-	j.at("itemformat").get_to(item.itemformat);
+	j.at("dataformat").get_to(item.itemformat);
 	j.at("formatname").get_to(formatname);
 	j.at("textcontent").get_to(textcontent);
 	j.at("children").get_to(item.children);
 	j.at("modified").get_to(ts);
+	j.at("op_modifiers").get_to(item.op_modifiers);
+	j.at("op_virtkey").get_to(item.op_virtkey);
+	j.at("op_paste").get_to(item.op_paste);
 
 	item.title = utf8_to_utf16(title);
 	item.formatname = utf8_to_utf16(formatname);
@@ -74,6 +89,92 @@ void from_json(const json& j, clip_item& item) {
 }
 
 
+void to_json(json& j, DATA_INFO* di) {
+	cl_item item(di);
+	// local UTF-8 interim variables
+	string title, formatname, textcontent, windowname;
+	UINT dataformat = 0;
+	TIMESTAMP_STRUCT ts = item.get_modified();
+	// convert TIMESTAMP_STRUCT to a string
+	string modify = utf16_to_utf8(
+		linguversa::string_format(TEXT("%04d-%02d-%02d %02d:%02d:%02d.%09d"), 
+			ts.year,
+			ts.month,
+			ts.day,
+			ts.hour,
+			ts.minute,
+			ts.second,
+			ts.fraction));
+
+	// the UTF-8 standard conversion facet
+	title = utf16_to_utf8(item.get_title());
+	windowname = utf16_to_utf8(item.get_windowname());
+
+	// if item is TYPE_ITEM, we try to get the text content
+	if (di->type == TYPE_ITEM) {
+		DATA_INFO* ti = item.find_format(CF_UNICODETEXT);
+		if (ti == nullptr) {
+			ti = item.find_format(CF_TEXT);
+			// If format is CF_TEXT it is in locale multibyte encoded.
+			// cl_item(ti).textcontent yields conversion to UTF-16,
+			// which will in turn be converted to UTF-8.
+			// Thus we have a transparent conversion from locale multi_byte to UTF-8.
+		}
+		if (ti != nullptr) {
+			// convert UTF-16 to UTF-8
+			textcontent = utf16_to_utf8(cl_item(ti).textcontent);
+			dataformat = ti->format;
+			formatname = utf16_to_utf8(cl_item(ti).formatname);
+		}
+
+		if (textcontent.empty()) {
+			return;
+		}
+	}
+
+	list<DATA_INFO*> children;
+	if (di->type == TYPE_FOLDER || di->type == TYPE_ROOT) {
+		for (DATA_INFO* cdi = item.get_child(); cdi != nullptr; cdi = cdi->next)
+			children.push_back(cdi);
+	}
+
+	j = json{
+		{"title", title },
+		{"itemtype", di->type },
+		{"dataformat", dataformat },
+		{"formatname", formatname },
+		{"windowname", windowname },
+		{"textcontent", textcontent },
+		{"children", children },
+		{"modified", modify },
+		//{"hkey_id", di->hkey_id },
+		{"op_modifiers", di->op_modifiers },
+		{"op_virtkey", di->op_virtkey },
+		{"op_paste", di->op_paste }
+	};
+}
+
+void to_json(json& j, TOOL_DATA_INFO* tdi) {
+	// single item
+	if (tdi->next == nullptr) {
+		if (tdi->di != nullptr)
+			to_json(j, tdi->di);
+		return;
+	}
+
+	// several items
+	list<DATA_INFO*> items;
+	for (TOOL_DATA_INFO* t = tdi; t != NULL; t = t->next) {
+		if (t->di == NULL)
+			continue;
+
+		items.push_back(t->di);
+	}
+
+	to_json(j, items);
+}
+
+
 /*
  * save_json
  */
@@ -86,16 +187,18 @@ __declspec(dllexport) int CALLBACK save_json(const HWND hWnd, TOOL_EXEC_INFO* te
 	if (tdi->di == NULL)
 		return TOOL_ERROR;
 
-	clip_item ci;
-	int ret = ci.init(tdi);
-	if (ret != TOOL_SUCCEED)
-		return ret;
+	int ret = TOOL_SUCCEED;
 
 	json jitem;
-	to_json(jitem, ci);
+	to_json(jitem, tdi);
 
 	OPENFILENAME of;
-	TCHAR file_name[MAX_PATH];
+	wchar_t file_name[MAX_PATH];
+
+	wstring fname = cl_item(tdi->di).title + L".json\0";
+	if (fname.size() >= MAX_PATH)
+		fname = L".json\0";
+	lstrcpy(file_name, fname.c_str());
 
 	try
 	{
@@ -105,7 +208,6 @@ __declspec(dllexport) int CALLBACK save_json(const HWND hWnd, TOOL_EXEC_INFO* te
 		of.hwndOwner = hWnd;
 		of.lpstrFilter = TEXT("*.json\0*.json\0\0");
 		of.nFilterIndex = 1;
-		lstrcpy(file_name, TEXT(".json\0"));
 		of.lpstrFile = file_name;
 		of.nMaxFile = MAX_PATH - 1;
 		of.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
@@ -143,8 +245,10 @@ __declspec(dllexport) int CALLBACK load_json(const HWND hWnd, TOOL_EXEC_INFO* te
 		return TOOL_ERROR;
 
 	OPENFILENAME of;
-	TCHAR file_name[MAX_PATH];
+	wchar_t file_name[MAX_PATH];
 	int ret = TOOL_SUCCEED;
+
+	lstrcpy(file_name, L".json\0");
 
 	try
 	{
@@ -152,9 +256,8 @@ __declspec(dllexport) int CALLBACK load_json(const HWND hWnd, TOOL_EXEC_INFO* te
 		of.lStructSize = sizeof(OPENFILENAME);
 		of.hInstance = hInst;
 		of.hwndOwner = hWnd;
-		of.lpstrFilter = TEXT("*.json\0*.json\0\0");
+		of.lpstrFilter = L"*.json\0*.json\0\0";
 		of.nFilterIndex = 1;
-		lstrcpy(file_name, TEXT(".json\0"));
 		of.lpstrFile = file_name;
 		of.nMaxFile = MAX_PATH - 1;
 		of.Flags = OFN_FILEMUSTEXIST;
@@ -175,6 +278,7 @@ __declspec(dllexport) int CALLBACK load_json(const HWND hWnd, TOOL_EXEC_INFO* te
 		ret = ci.to_data_info(tdi->di, hWnd);
 
 		// Notify regist/template changes
+		SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
 		SendMessage(hWnd, WM_REGIST_CHANGED, 0, 0);
 		return ret;
 	}

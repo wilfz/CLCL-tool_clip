@@ -5,12 +5,13 @@
 #define IDD_REPLACE_WHITESPACE          101
 #define IDD_CONVERT_WHITESPACE          102
 #define IDD_ODBC_SETTINGS               103
-#define IDS_REPLACE_WHITESPACE          104
-#define IDS_TABSEPERATE_TO_HTML         105
-#define IDS_SAVE_TO_DB                  106
-#define IDS_LOAD_FROM_DB                107
-#define IDS_SAVE_TO_JSON                108
-#define IDS_LOAD_FROM_JSON              109
+#define IDD_TAB_INSERT                  104
+#define IDS_REPLACE_WHITESPACE          106
+#define IDS_TABSEPERATE_TO_HTML         107
+#define IDS_SAVE_TO_DB                  108
+#define IDS_LOAD_FROM_DB                109
+#define IDS_SAVE_TO_JSON                110
+#define IDS_LOAD_FROM_JSON              111
 #define IDC_STATIC_REPLACEMENT          1001
 #define IDC_EDIT_REPLACEMENT            1002
 #define IDC_IS_DSN                      1004
@@ -24,7 +25,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        110
+#define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           101

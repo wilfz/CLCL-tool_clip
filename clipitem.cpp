@@ -1,6 +1,8 @@
 
 #include "clipitem.h"
 #include <codecvt>
+#include <cassert>
+
 
 using namespace std;
 
@@ -13,7 +15,7 @@ int clip_item::init(TOOL_DATA_INFO* tdi)
 	// convert di->modified (FILETIME) to TIMESTAMP_STRUCT
 	TIMESTAMP_STRUCT ts = { 0,0,0, 0,0,0, 0 };
 	bool withTS = FileTimeToTimestampStruct(tdi->di->modified, modified);
-	title.assign(tdi->di->title ? tdi->di->title : _T(""));
+	title.assign(tdi->di->title ? tdi->di->title : L"");
 	itemtype = tdi->di->type;
 
 	if (tdi->di->type == TYPE_FOLDER || tdi->di->type == TYPE_ROOT) {
@@ -32,14 +34,12 @@ int clip_item::init(TOOL_DATA_INFO* tdi)
 	if (tdi->di->type == TYPE_ITEM) {
 		bool bFound = false;
 		for (wk_tdi = tdi->child; wk_tdi != NULL; wk_tdi = wk_tdi->next)
-			// for the moment we save only odbc_save_unicode;
 			if (wk_tdi->di && wk_tdi->di->format == CF_UNICODETEXT) {
 				bFound = true;
 				break;
 			}
 		if (!bFound) {
 			for (wk_tdi = tdi->child; wk_tdi != NULL; wk_tdi = wk_tdi->next)
-				// for the moment we save only odbc_save_unicode;
 				if (wk_tdi->di && wk_tdi->di->format == CF_TEXT) {
 					break;
 				}
@@ -91,8 +91,11 @@ int clip_item::init(TOOL_DATA_INFO* tdi)
 
 	itemtype = (long)di.type;
 	itemformat = (long)di.format;
-	formatname.assign(di.format_name ? di.format_name : _T(""));
+	formatname.assign(di.format_name ? di.format_name : L"");
 	textcontent = wsdata;
+	op_modifiers = di.op_modifiers;
+	op_virtkey = di.op_virtkey;
+	op_paste = di.op_paste;
 
 	return TOOL_SUCCEED;
 }
@@ -106,19 +109,37 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 
 	// both are folder and have the same name
 	if (this->itemtype == TYPE_FOLDER && item->type == TYPE_FOLDER 
-		&& _tcsicmp(this->title.c_str(), item->title) == 0)
+			&& item->title != nullptr && _wcsicmp(this->title.c_str(), item->title) == 0
+		|| this->itemtype == TYPE_ROOT && item->type == TYPE_FOLDER)
 	{
 		ret = merge_into( item, hWnd);
 		return ret;
 	}
 
 	// item is folder with different name
-	if (item->type == TYPE_FOLDER) {
+	if (item->type == TYPE_FOLDER || item->type == TYPE_ROOT) {
 		DATA_INFO* lastchild = nullptr;
 		for (DATA_INFO* cdi = item->child; cdi != nullptr; cdi = cdi->next) {
-			// this already exists in folder?
-			if (this->itemtype == TYPE_DATA && cdi->type ==TYPE_ITEM && _tcsicmp(this->title.c_str(), cdi->title) == 0) {
-				return to_data_info(cdi, hWnd);
+			wstring title = cl_item(cdi).get_title();
+			if (this->itemtype == TYPE_FOLDER && cdi->type == TYPE_FOLDER 
+				&& title.size() > 0 && title == this->title) 
+			{
+				ret = merge_into(cdi, hWnd);
+				return ret;
+			}
+
+			if (cdi->type ==TYPE_ITEM || (this->itemtype == TYPE_DATA || this->itemtype == TYPE_ITEM)) {
+				// this already exists
+				// with same name in folder?
+				if (title.size() > 0 && title == this->title) {
+					return to_data_info(cdi, hWnd);
+				}
+				else {
+					wstring wsdata = cl_item(cdi).textcontent;
+					// or with same content
+					if (wsdata.size() > 0 && this->textcontent == wsdata)
+						return to_data_info(cdi, hWnd);
+				}
 			}
 
 			lastchild = cdi;
@@ -128,6 +149,7 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 		DATA_INFO* cdi = nullptr;
 		switch (this->itemtype)
 		{
+		case TYPE_ITEM:
 		case TYPE_DATA:
 			// create an item ...
 			if ((cdi = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_ITEM, (LPARAM)this->title.c_str())) == NULL) {
@@ -171,14 +193,16 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 		return to_data_info(cdi, hWnd);
 	}
 
-	if (this->itemtype != TYPE_DATA || item->type != TYPE_ITEM) {
+	if (item->type != TYPE_ITEM || (this->itemtype != TYPE_ITEM && this->itemtype != TYPE_DATA)) {
 		return TOOL_ERROR;
 	}
 
 	FILETIME dbft;
 	long cmp = 0;
 	if (!TimestampStructToFileTime(this->modified, dbft)) {
-		return TOOL_ERROR;
+		TIMESTAMP_STRUCT ts = { 2000,01,01, 00,00,00, 0} ;
+		if (!TimestampStructToFileTime(ts, dbft))
+			return TOOL_ERROR;
 	}
 		
 	// dbft older than item->modified ?
@@ -191,13 +215,18 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 	// this->modified is newer than item->modified
 	cl_mem(item->title) = this->title;
 
+	// TODO: check if the same combination of op_modifiers and op_virtkey already exists.
+	// If so, ignore it here.
+	item->op_modifiers = this->op_modifiers;
+	item->op_virtkey = this->op_virtkey;
+	item->op_paste = this->op_paste;
+
 	DATA_INFO* pd = nullptr;
 	// search for data_item with matching title and UNICODE format
 	// delete all other formats
 	for (DATA_INFO* p = item->child; p != nullptr; p = p->next) {
 		if (p->type == TYPE_DATA && p->format == CF_UNICODETEXT) {
 			pd = p;
-			cl_mem(pd->format_name) = this->formatname;
 		}
 		else {
 			SendMessage(hWnd, WM_ITEM_FREE, 0, (LPARAM)p);
@@ -205,6 +234,8 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 	}
 
 	item->child = pd;
+	if (pd != nullptr)
+		pd->next = nullptr;
 
 	if (pd == nullptr) {
 		// no data_item found, so we create a new one
@@ -230,10 +261,6 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 		item->child = pd;
 	}
 
-	string mbdata;
-	wstring wsdata;
-	size_t len = 0;
-
 	switch (this->itemformat) 
 	{
 		case CF_UNICODETEXT:
@@ -241,14 +268,14 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 			// allocate (this->textcontent.size() + 1) * sizeof(TCHAR) bytes in pd->data and
 			// copy this->textcontent to the allocated memory
 			HGLOBAL ret = NULL;
-			TCHAR* to_mem = nullptr;
+			wchar_t* to_mem = nullptr;
 			size_t targetlen = this->textcontent.size();
 			// reserve memory for copy target
-			if ((ret = GlobalAlloc(GHND, (targetlen + 1) * sizeof(TCHAR))) == NULL) {
+			if ((ret = GlobalAlloc(GHND, (targetlen + 1) * sizeof(wchar_t))) == NULL) {
 				return TOOL_ERROR;
 			}
 			// lock copy target
-			if ((to_mem = (TCHAR*)GlobalLock(ret)) == NULL) {
+			if ((to_mem = (wchar_t*)GlobalLock(ret)) == NULL) {
 				GlobalFree(ret);
 				return TOOL_ERROR;
 			}
@@ -263,7 +290,8 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 			if (pd->data != nullptr)
 				GlobalFree(pd->data);
 			pd->data = ret;
-			pd->size = (targetlen + 1) * sizeof(TCHAR);
+			pd->size = (targetlen + 1) * sizeof(wchar_t);
+			cl_mem(pd->format_name) = this->formatname;
 		}
 		break;
 
@@ -309,6 +337,7 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 				GlobalFree(pd->data);
 			pd->data = ret;
 			pd->size = targetlen + 1;
+			cl_mem(pd->format_name) = this->formatname;
 		}
 		break;
 
@@ -331,16 +360,254 @@ int clip_item::merge_into(DATA_INFO* item, HWND hWnd)
 	return TOOL_SUCCEED;
 }
 
-const TCHAR* cl_mem::operator=(const std::tstring& s)
+const wchar_t* cl_mem::operator=(const std::wstring& s)
 {
+	if (s.size() == 0) {
+		mem_free((void**)_pp);
+		*_pp = nullptr;
+		return (const wchar_t*)*_pp;
+	}
+
 	// if strings are equal, return the old pointer
-	if (*_pp && _tcscmp((TCHAR*)*_pp, s.c_str()) == 0)
-		return (TCHAR*)*_pp;
+	if (*_pp && wcscmp((wchar_t*)*_pp, s.c_str()) == 0)
+		return (const wchar_t*)*_pp;
 
 	mem_free((void**)_pp);
 	*_pp = alloc_copy(s.c_str());
-	return (TCHAR*)*_pp;
+	return (const wchar_t*)*_pp;
 }
+
+cl_mem::operator const std::wstring() const
+{
+	wstring s;
+	if (*_pp)
+		s.assign((wchar_t*)*_pp);
+	return s;
+}
+
+void cl_item::append_child(DATA_INFO* di) 
+{
+	assert(_pi);
+	if (_pi->child == nullptr) {
+		_pi->child = di;
+		return;
+	}
+
+	DATA_INFO* wk_di = _pi->child; 
+	while (wk_di->next != nullptr)
+		wk_di = wk_di->next;
+
+	wk_di->next = di;
+}
+
+DATA_INFO* cl_item::find_format(UINT format) const
+{
+	if (_pi && _pi->type == TYPE_DATA && _pi->format == format)
+		return _pi;
+
+	if (_pi && _pi->type == TYPE_ITEM) {
+		for (DATA_INFO* di = _pi->child; di != nullptr; di = di->next)
+			if (di->format == format)
+				return di;
+	}
+
+	return nullptr;
+}
+
+DATA_INFO* cl_item::find_format(const wchar_t* format) const
+{
+	if (format == nullptr)
+		return nullptr;
+
+	if (_pi && _pi->type == TYPE_DATA && _pi->format_name && _wcsicmp(_pi->format_name, format) == 0)
+		return _pi;
+
+	if (_pi && _pi->type == TYPE_ITEM) {
+		for (DATA_INFO* di = _pi->child; di != nullptr; di = di->next)
+			if (di->format_name && _wcsicmp(di->format_name, format) == 0)
+				return di;
+	}
+
+	return nullptr;
+}
+
+void cl_item::set_title(std::wstring s)
+{
+	assert(_pi);
+	assert(_pi->type == TYPE_ITEM || _pi->type == TYPE_FOLDER || _pi->type == TYPE_ROOT);
+	if (_pi != nullptr || _pi->type != TYPE_ITEM && _pi->type != TYPE_FOLDER && _pi->type != TYPE_ROOT)
+		return;
+	cl_mem(_pi->title) = s;
+}
+
+void cl_item::set_modified(TIMESTAMP_STRUCT ts)
+{
+	assert(_pi);
+	assert(_pi->type == TYPE_ITEM);
+	if (_pi) {
+		TimestampStructToFileTime(ts, _pi->modified);
+	}
+}
+
+TIMESTAMP_STRUCT cl_item::get_modified() const
+{
+	TIMESTAMP_STRUCT ts = { 0,0,0, 0,0,0, 0 };
+	if (_pi && _pi->type == TYPE_ITEM) {
+		FileTimeToTimestampStruct(_pi->modified, ts);
+	}
+	return ts;
+}
+
+void cl_item::set_windowname(std::wstring s)
+{
+	if (_pi && _pi->type == TYPE_ITEM) {
+		cl_mem(_pi->window_name) = s;
+	}
+}
+
+void cl_item::set_formatname(std::wstring s)
+{
+	if (_pi && _pi->type == TYPE_DATA) {
+		cl_mem(_pi->format_name) = s;
+	}
+}
+
+void cl_item::set_textcontent(std::wstring str)
+{
+	DATA_INFO* pd = find_format(CF_UNICODETEXT);
+	if (pd == nullptr) {
+		pd = find_format(CF_TEXT);
+	}
+
+	assert(pd);
+
+	switch (pd->format)
+	{
+	case CF_UNICODETEXT:
+	{
+		// allocate (str.size() + 1) * sizeof(wchar_t) bytes in pd->data and
+		// copy this->textcontent to the allocated memory
+		HGLOBAL ret = NULL;
+		wchar_t* to_mem = nullptr;
+		size_t targetlen = str.size();
+		// reserve memory for copy target
+		if ((ret = GlobalAlloc(GHND, (targetlen + 1) * sizeof(wchar_t))) == NULL) {
+			assert(false);
+			return;
+		}
+		// lock copy target
+		if ((to_mem = (wchar_t*)GlobalLock(ret)) == NULL) {
+			GlobalFree(ret);
+			assert(false);
+			return;
+		}
+
+		// copying to target
+		for (size_t i = 0; i < targetlen; i++) {
+			to_mem[i] = str[i];
+		}
+		to_mem[targetlen] = L'\0';
+
+		GlobalUnlock(ret);
+		if (pd->data != nullptr)
+			GlobalFree(pd->data);
+		pd->data = ret;
+		pd->size = (targetlen + 1) * sizeof(wchar_t);
+		cl_mem(pd->format_name) = format_unicode;
+	}
+	break;
+
+	case CF_TEXT:
+	{
+		// first convert to multibyte mb
+		int len = str.length() + 1;
+		char* mb = new char[len * 4];
+		BOOL bUsedDefaultChar = FALSE;
+		int cnt = ::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(),
+			len, mb, len * 4, NULL, &bUsedDefaultChar);
+
+		if (cnt <= 0 || cnt != strlen(mb) + 1) {
+			delete[] mb;
+			assert(false);
+			return;
+		}
+
+		// then allocate data at to_mem
+		HGLOBAL ret = NULL;
+		char* to_mem = nullptr;
+		size_t targetlen = strlen(mb);
+		// reserve memory for copy target
+		if ((ret = GlobalAlloc(GHND, targetlen + 1)) == NULL) {
+			assert(false);
+			return;
+		}
+		// lock copy target
+		if ((to_mem = (char*)GlobalLock(ret)) == NULL) {
+			delete[] mb;
+			GlobalFree(ret);
+			assert(false);
+			return;
+		}
+
+		// copying to target
+		for (size_t i = 0; i < targetlen; i++) {
+			to_mem[i] = mb[i];
+		}
+		to_mem[targetlen] = '\0';
+
+		delete[] mb;
+		GlobalUnlock(ret);
+		if (pd->data != nullptr)
+			GlobalFree(pd->data);
+		pd->data = ret;
+		pd->size = targetlen + 1;
+		cl_mem(pd->format_name) = format_multibyte;
+	}
+	break;
+
+	}
+
+	return;
+}
+
+std::wstring cl_item::get_textcontent() const
+{
+	wstring wsdata;
+	DATA_INFO* di = find_format(CF_UNICODETEXT);
+	if (di != nullptr) {
+		wchar_t* ws = nullptr;
+		if ((ws = (wchar_t*)GlobalLock(di->data)) == NULL) {
+			return wsdata;
+		}
+		wsdata.assign(ws);
+		GlobalUnlock(di->data);
+		return wsdata;
+	}
+
+	di = find_format(CF_TEXT);
+	if (di != nullptr) {
+		char* s = nullptr;
+		if ((s = (char*)GlobalLock(di->data)) == NULL) {
+			return wsdata;
+		}
+		int cnt;
+		int len = strlen(s) + 1;
+		wchar_t* ws = new wchar_t[len];
+		cnt = ::MultiByteToWideChar(CP_THREAD_ACP, 0, s, len, ws, len);
+		if (cnt <= 0) {	// error
+			delete[] ws;
+			GlobalUnlock(di->data);
+			return wsdata;
+		}
+
+		wsdata.assign(ws);
+		delete[] ws;
+		GlobalUnlock(di->data);
+	}
+
+	return wsdata;
+}
+
 
 bool FileTimeToTimestampStruct(const FILETIME ft, TIMESTAMP_STRUCT& ts)
 {

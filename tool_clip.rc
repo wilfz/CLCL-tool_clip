@@ -152,8 +152,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,0,0,2
+ PRODUCTVERSION 1,0,0,2
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -170,12 +170,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "wilfzim"
             VALUE "FileDescription", "Plugin DLL for CLCL.exe"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileVersion", "1.0.0.2"
             VALUE "InternalName", "tool_clip.dll"
             VALUE "LegalCopyright", "Copyright (C) 2024"
             VALUE "OriginalFilename", "tool_clip.dll"
             VALUE "ProductName", "ToolClip Plugin for CLCL"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", "1.0.0.2"
         END
     END
     BLOCK "VarFileInfo"
@@ -318,8 +318,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,0,0,2
+ PRODUCTVERSION 1,0,0,2
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -336,12 +336,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "wilfzim"
             VALUE "FileDescription", "Plugin DLL for CLCL.exe"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileVersion", "1.0.0.2"
             VALUE "InternalName", "tool_clip.dll"
             VALUE "LegalCopyright", "Copyright (C) 2024"
             VALUE "OriginalFilename", "tool_clip.dll"
             VALUE "ProductName", "ToolClip Plugin for CLCL"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", "1.0.0.2"
         END
     END
     BLOCK "VarFileInfo"
