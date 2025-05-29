@@ -265,7 +265,7 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 	{
 		case CF_UNICODETEXT:
 		{
-			// allocate (this->textcontent.size() + 1) * sizeof(TCHAR) bytes in pd->data and
+			// allocate (this->textcontent.size() + 1) * sizeof(wchar_t) bytes in pd->data and
 			// copy this->textcontent to the allocated memory
 			HGLOBAL ret = NULL;
 			wchar_t* to_mem = nullptr;
