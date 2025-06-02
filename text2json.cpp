@@ -20,7 +20,7 @@ extern HINSTANCE hInst;
 void to_json(json& j, const clip_item& item) {
 	// local UTF-8 interim variables
 	string title, formatname, textcontent;
-	tstring wts = linguversa::string_format(TEXT("%04d-%02d-%02d %02d:%02d:%02d.%09d"),
+	wstring wts = linguversa::string_format(TEXT("%04d-%02d-%02d %02d:%02d:%02d.%09d"),
 		item.modified.year,
 		item.modified.month,
 		item.modified.day,
