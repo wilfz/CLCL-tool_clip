@@ -51,7 +51,7 @@ jobs:
 
       # A file, directory or wildcard pattern that describes what to upload
       # Required.
-      path: Release\tool_clip.dll
+      path: Release/ool_clip.dll
 
       # The desired behavior if no files are found using the provided path.
       # Available Options:
