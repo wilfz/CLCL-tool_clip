@@ -20,14 +20,14 @@ extern HINSTANCE hInst;
 void to_json(json& j, const clip_item& item) {
 	// local UTF-8 interim variables
 	string title, formatname, textcontent;
-	wstring wts = linguversa::string_format(TEXT("%04d-%02d-%02d %02d:%02d:%02d.%09d"),
-		item.modified.year,
-		item.modified.month,
-		item.modified.day,
-		item.modified.hour,
-		item.modified.minute,
-		item.modified.second,
-		item.modified.fraction);
+	wstring wts = linguversa::string_format(TEXT("%04d-%02d-%02d %02d:%02d:%02d.%03d"),
+		item.modified.wYear,
+		item.modified.wMonth,
+		item.modified.wDay,
+		item.modified.wHour,
+		item.modified.wMinute,
+		item.modified.wSecond,
+		item.modified.wMilliseconds);
 
 	// the UTF-8 standard conversion facet
 	title = utf16_to_utf8(item.title);
@@ -79,13 +79,13 @@ void from_json(const json& j, clip_item& item) {
 	item.formatname = utf8_to_utf16(formatname);
 	item.textcontent = utf8_to_utf16(textcontent);
 
-	item.modified.year = atoi(ts.substr(0, 4).c_str());
-	item.modified.month = atoi(ts.substr(5, 2).c_str());
-	item.modified.day = atoi(ts.substr(8, 2).c_str());
-	item.modified.hour = atoi(ts.substr(11, 2).c_str());
-	item.modified.minute = atoi(ts.substr(14, 2).c_str());
-	item.modified.second = atoi(ts.substr(17, 2).c_str());
-	item.modified.fraction = atol(ts.substr(20, 9).c_str());
+	item.modified.wYear = atoi(ts.substr(0, 4).c_str());
+	item.modified.wMonth = atoi(ts.substr(5, 2).c_str());
+	item.modified.wDay = atoi(ts.substr(8, 2).c_str());
+	item.modified.wHour = atoi(ts.substr(11, 2).c_str());
+	item.modified.wMinute = atoi(ts.substr(14, 2).c_str());
+	item.modified.wSecond = atoi(ts.substr(17, 2).c_str());
+	item.modified.wMilliseconds = atoi(ts.substr(20, 3).c_str());
 }
 
 
@@ -94,17 +94,17 @@ void to_json(json& j, DATA_INFO* di) {
 	// local UTF-8 interim variables
 	string title, formatname, textcontent, windowname;
 	UINT dataformat = 0;
-	TIMESTAMP_STRUCT ts = item.get_modified();
+	SYSTEMTIME st = item.get_modified();
 	// convert TIMESTAMP_STRUCT to a string
 	string modify = utf16_to_utf8(
-		linguversa::string_format(TEXT("%04d-%02d-%02d %02d:%02d:%02d.%09d"), 
-			ts.year,
-			ts.month,
-			ts.day,
-			ts.hour,
-			ts.minute,
-			ts.second,
-			ts.fraction));
+		linguversa::string_format(TEXT("%04d-%02d-%02d %02d:%02d:%02d.%03d"), 
+			st.wYear,
+			st.wMonth,
+			st.wDay,
+			st.wHour,
+			st.wMinute,
+			st.wSecond,
+			st.wMilliseconds));
 
 	// the UTF-8 standard conversion facet
 	title = utf16_to_utf8(item.get_title());

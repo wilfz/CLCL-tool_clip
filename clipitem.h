@@ -1,11 +1,10 @@
 
 /* Include Files */
 #include "CLCLPlugin.h"
-#include "memory.h"
-
 #include <vector>
 #include <string>
 #include <sqltypes.h>
+
 
 const wchar_t format_unicode[] = L"UNICODE TEXT";
 const wchar_t format_multibyte[] = L"TEXT";
@@ -26,7 +25,7 @@ public:
 	// even if vector is not as performant as list, it is easier to use
 	// and we do not have to care about destroying the child items
 	std::vector<clip_item> children;
-	TIMESTAMP_STRUCT modified;
+	SYSTEMTIME modified;
 	std::wstring windowname;
 	UINT op_modifiers;
 	UINT op_virtkey;
@@ -91,8 +90,8 @@ public:
 	};
 
 	// TYPE_ITEM:
-	void set_modified(TIMESTAMP_STRUCT ts); 
-	TIMESTAMP_STRUCT get_modified() const;
+	void set_modified(SYSTEMTIME st); 
+	SYSTEMTIME get_modified() const;
 
 	void set_windowname(std::wstring s);
 	inline std::wstring get_windowname() const {
@@ -138,7 +137,7 @@ public:
 	// properties:
 	__declspec(property(get = get_title, put = set_title)) std::wstring title;
 	__declspec(property(get = get_itemtype, put = set_itemtype)) int itemtype;
-	__declspec(property(get = get_modified, put = set_modified)) TIMESTAMP_STRUCT modified;
+	__declspec(property(get = get_modified, put = set_modified)) SYSTEMTIME modified;
 	__declspec(property(get = get_windowname, put = set_windowname)) std::wstring windowname;
 	__declspec(property(get = get_op_modifiers, put = set_op_modifiers)) UINT op_modifiers;
 	__declspec(property(get = get_op_virtkey, put = set_op_virtkey)) UINT op_virtkey;
@@ -149,6 +148,7 @@ public:
 private:
 	DATA_INFO* _pi;
 };
+
 
 // helper functions
 bool FileTimeToTimestampStruct(const FILETIME ft, TIMESTAMP_STRUCT& ts);

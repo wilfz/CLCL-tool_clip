@@ -1,7 +1,8 @@
 
-#include "clipitem.h"
 #include <codecvt>
 #include <cassert>
+#include "clipitem.h"
+#include "memory.h"
 
 
 using namespace std;
@@ -13,8 +14,8 @@ int clip_item::init(TOOL_DATA_INFO* tdi)
 	if (tdi == nullptr || tdi->di == nullptr)
 		return TOOL_ERROR;
 	// convert di->modified (FILETIME) to TIMESTAMP_STRUCT
-	TIMESTAMP_STRUCT ts = { 0,0,0, 0,0,0, 0 };
-	bool withTS = FileTimeToTimestampStruct(tdi->di->modified, modified);
+	SYSTEMTIME ts = { 0,0,0, 0,0,0, 0 };
+	bool withTS = FileTimeToSystemTime(&tdi->di->modified, &modified);
 	title.assign(tdi->di->title ? tdi->di->title : L"");
 	itemtype = tdi->di->type;
 
@@ -199,9 +200,9 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 
 	FILETIME dbft;
 	long cmp = 0;
-	if (!TimestampStructToFileTime(this->modified, dbft)) {
-		TIMESTAMP_STRUCT ts = { 2000,01,01, 00,00,00, 0} ;
-		if (!TimestampStructToFileTime(ts, dbft))
+	if (!SystemTimeToFileTime(&this->modified, &dbft)) {
+		SYSTEMTIME ts = { 2000,01,01, 00,00,00, 0} ;
+		if (!SystemTimeToFileTime(&ts, &dbft))
 			return TOOL_ERROR;
 	}
 		
@@ -213,19 +214,26 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 	}
 
 	// this->modified is newer than item->modified
+	if (cl_item(item).textcontent == this->textcontent)
+		return TOOL_SUCCEED; // nothing to do
 	cl_mem(item->title) = this->title;
 
 	// TODO: check if the same combination of op_modifiers and op_virtkey already exists.
 	// If so, ignore it here.
-	item->op_modifiers = this->op_modifiers;
-	item->op_virtkey = this->op_virtkey;
+	{
+		item->op_modifiers = this->op_modifiers;
+		item->op_virtkey = this->op_virtkey;
+	}
 	item->op_paste = this->op_paste;
 
 	DATA_INFO* pd = nullptr;
 	// search for data_item with matching title and UNICODE format
 	// delete all other formats
 	for (DATA_INFO* p = item->child; p != nullptr; p = p->next) {
-		if (p->type == TYPE_DATA && p->format == CF_UNICODETEXT) {
+		if (pd == nullptr && p->type == TYPE_DATA && p->format == CF_UNICODETEXT) {
+			pd = p;
+		}
+		else if (pd == nullptr && p->type == TYPE_DATA && p->format == CF_TEXT) {
 			pd = p;
 		}
 		else {
@@ -251,7 +259,8 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 			pd->format = CF_TEXT;
 			break;
 		default:
-			if ((pd = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_DATA, (LPARAM)(this->formatname.c_str()))) == NULL)
+			// NYI
+			//if ((pd = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_DATA, (LPARAM)(this->formatname.c_str()))) == NULL)
 				return TOOL_ERROR;
 		}
 
@@ -261,89 +270,9 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 		item->child = pd;
 	}
 
-	switch (this->itemformat) 
-	{
-		case CF_UNICODETEXT:
-		{
-			// allocate (this->textcontent.size() + 1) * sizeof(wchar_t) bytes in pd->data and
-			// copy this->textcontent to the allocated memory
-			HGLOBAL ret = NULL;
-			wchar_t* to_mem = nullptr;
-			size_t targetlen = this->textcontent.size();
-			// reserve memory for copy target
-			if ((ret = GlobalAlloc(GHND, (targetlen + 1) * sizeof(wchar_t))) == NULL) {
-				return TOOL_ERROR;
-			}
-			// lock copy target
-			if ((to_mem = (wchar_t*)GlobalLock(ret)) == NULL) {
-				GlobalFree(ret);
-				return TOOL_ERROR;
-			}
+	cl_item(pd).set_textcontent(this->textcontent);
 
-			// copying to target
-			for (size_t i = 0; i < targetlen; i++) {
-				to_mem[i] = this->textcontent[i];
-			}
-			to_mem[targetlen] = L'\0';
-
-			GlobalUnlock(ret);
-			if (pd->data != nullptr)
-				GlobalFree(pd->data);
-			pd->data = ret;
-			pd->size = (targetlen + 1) * sizeof(wchar_t);
-			cl_mem(pd->format_name) = this->formatname;
-		}
-		break;
-
-		case CF_TEXT:
-		{
-			// first convert to multibyte mb
-			int len = this->textcontent.length() + 1;
-			char* mb = new char[len * 4];
-			BOOL bUsedDefaultChar = FALSE;
-			int cnt = ::WideCharToMultiByte(CP_THREAD_ACP, 0, this->textcontent.c_str(), 
-				len, mb, len * 4, NULL, &bUsedDefaultChar);
-		
-			if (cnt <= 0 || cnt != strlen(mb) + 1) {
-				delete[] mb;
-				return TOOL_ERROR;
-			}
-
-			// then allocate data at to_mem
-			HGLOBAL ret = NULL;
-			char* to_mem = nullptr;
-			size_t targetlen = strlen(mb);
-			// reserve memory for copy target
-			if ((ret = GlobalAlloc(GHND, targetlen + 1)) == NULL) {
-				delete[] mb;
-				return TOOL_ERROR;
-			}
-			// lock copy target
-			if ((to_mem = (char*)GlobalLock(ret)) == NULL) {
-				delete[] mb;
-				GlobalFree(ret);
-				return TOOL_ERROR;
-			}
-
-			// copying to target
-			for (size_t i = 0; i < targetlen; i++) {
-				to_mem[i] = mb[i];
-			}
-			to_mem[targetlen] = '\0';
-
-			delete[] mb;
-			GlobalUnlock(ret);
-			if (pd->data != nullptr)
-				GlobalFree(pd->data);
-			pd->data = ret;
-			pd->size = targetlen + 1;
-			cl_mem(pd->format_name) = this->formatname;
-		}
-		break;
-
-	}
-
-	TimestampStructToFileTime(this->modified, item->modified);
+	SystemTimeToFileTime(&this->modified, &item->modified);
 
 	return TOOL_SUCCEED;
 }
@@ -440,22 +369,22 @@ void cl_item::set_title(std::wstring s)
 	cl_mem(_pi->title) = s;
 }
 
-void cl_item::set_modified(TIMESTAMP_STRUCT ts)
+void cl_item::set_modified(SYSTEMTIME st)
 {
 	assert(_pi);
 	assert(_pi->type == TYPE_ITEM);
 	if (_pi) {
-		TimestampStructToFileTime(ts, _pi->modified);
+		SystemTimeToFileTime(&st, &_pi->modified);
 	}
 }
 
-TIMESTAMP_STRUCT cl_item::get_modified() const
+SYSTEMTIME cl_item::get_modified() const
 {
-	TIMESTAMP_STRUCT ts = { 0,0,0, 0,0,0, 0 };
+	SYSTEMTIME st = { 0,0,0, 0,0,0, 0 };
 	if (_pi && _pi->type == TYPE_ITEM) {
-		FileTimeToTimestampStruct(_pi->modified, ts);
+		FileTimeToSystemTime(&_pi->modified, &st);
 	}
-	return ts;
+	return st;
 }
 
 void cl_item::set_windowname(std::wstring s)
@@ -648,6 +577,7 @@ bool TimestampStructToFileTime(const TIMESTAMP_STRUCT ts, FILETIME& ft)
 	return false;
 }
 
+
 // The following 2 functions are from
 // https://gist.github.com/gchudnov/c1ba72d45e394180e22f
 
@@ -667,3 +597,4 @@ string utf16_to_utf8(const wstring& utf16) {
 	string utf8 = convert.to_bytes(u16str);
 	return utf8;
 }
+
