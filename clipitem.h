@@ -151,6 +151,8 @@ private:
 
 
 // helper functions
+bool FileTimeToSystemTimeCL(const FILETIME& ft, SYSTEMTIME& st);
+bool SystemTimeToFileTimeCL(const SYSTEMTIME& st, FILETIME& ft);
 bool FileTimeToTimestampStruct(const FILETIME ft, TIMESTAMP_STRUCT& ts);
 bool TimestampStructToFileTime(const TIMESTAMP_STRUCT ts, FILETIME& ft);
 

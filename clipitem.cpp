@@ -15,7 +15,7 @@ int clip_item::init(TOOL_DATA_INFO* tdi)
 		return TOOL_ERROR;
 	// convert di->modified (FILETIME) to TIMESTAMP_STRUCT
 	SYSTEMTIME ts = { 0,0,0, 0,0,0, 0 };
-	bool withTS = FileTimeToSystemTime(&tdi->di->modified, &modified);
+	bool withTS = ::FileTimeToSystemTimeCL(tdi->di->modified, modified);
 	title.assign(tdi->di->title ? tdi->di->title : L"");
 	itemtype = tdi->di->type;
 
@@ -200,9 +200,9 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 
 	FILETIME dbft;
 	long cmp = 0;
-	if (!SystemTimeToFileTime(&this->modified, &dbft)) {
+	if (!::SystemTimeToFileTimeCL(this->modified, dbft)) {
 		SYSTEMTIME ts = { 2000,01,01, 00,00,00, 0} ;
-		if (!SystemTimeToFileTime(&ts, &dbft))
+		if (!::SystemTimeToFileTimeCL(ts, dbft))
 			return TOOL_ERROR;
 	}
 		
@@ -272,7 +272,7 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 
 	cl_item(pd).set_textcontent(this->textcontent);
 
-	SystemTimeToFileTime(&this->modified, &item->modified);
+	::SystemTimeToFileTimeCL(this->modified, item->modified);
 
 	return TOOL_SUCCEED;
 }
@@ -374,16 +374,17 @@ void cl_item::set_modified(SYSTEMTIME st)
 	assert(_pi);
 	assert(_pi->type == TYPE_ITEM);
 	if (_pi) {
-		SystemTimeToFileTime(&st, &_pi->modified);
+		::SystemTimeToFileTimeCL(st, _pi->modified);
 	}
 }
 
 SYSTEMTIME cl_item::get_modified() const
 {
 	SYSTEMTIME st = { 0,0,0, 0,0,0, 0 };
-	if (_pi && _pi->type == TYPE_ITEM) {
-		FileTimeToSystemTime(&_pi->modified, &st);
-	}
+	if (_pi && _pi->type == TYPE_ITEM && ::FileTimeToSystemTimeCL(_pi->modified, st))
+		return st;
+
+	st = { 0,0,0, 0,0,0, 0 };
 	return st;
 }
 
@@ -537,6 +538,28 @@ std::wstring cl_item::get_textcontent() const
 	return wsdata;
 }
 
+bool FileTimeToSystemTimeCL(const FILETIME& ft, SYSTEMTIME& st)
+{
+	if (ft.dwHighDateTime != 0 && ft.dwLowDateTime != 0
+		&& ::FileTimeToSystemTime(&ft, &st))
+	{
+		return true;
+	}
+
+	st = { 0,0,0, 0,0,0, 0 };
+	return false;
+}
+
+bool SystemTimeToFileTimeCL(const SYSTEMTIME& st , FILETIME& ft)
+{
+	if (st.wYear >= 1900 && st.wMonth > 0 && st.wDay > 0) {
+		if (SystemTimeToFileTime(&st, &ft))
+			return true;
+	}
+
+	ft.dwHighDateTime = ft.dwLowDateTime = 0;
+	return false;
+}
 
 bool FileTimeToTimestampStruct(const FILETIME ft, TIMESTAMP_STRUCT& ts)
 {
