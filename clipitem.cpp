@@ -14,7 +14,7 @@ int clip_item::init(TOOL_DATA_INFO* tdi)
 	if (tdi == nullptr || tdi->di == nullptr)
 		return TOOL_ERROR;
 	// convert di->modified (FILETIME) to TIMESTAMP_STRUCT
-	SYSTEMTIME ts = { 0,0,0, 0,0,0, 0 };
+	SYSTEMTIME ts = { 0,0,0,0, 0,0,0, 0 };
 	bool withTS = ::FileTimeToSystemTimeCL(tdi->di->modified, modified);
 	title.assign(tdi->di->title ? tdi->di->title : L"");
 	itemtype = tdi->di->type;
@@ -201,7 +201,7 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 	FILETIME dbft;
 	long cmp = 0;
 	if (!::SystemTimeToFileTimeCL(this->modified, dbft)) {
-		SYSTEMTIME ts = { 2000,01,01, 00,00,00, 0} ;
+		SYSTEMTIME ts = { 2000,01,0,01, 00,00,00, 0} ;
 		if (!::SystemTimeToFileTimeCL(ts, dbft))
 			return TOOL_ERROR;
 	}
@@ -227,7 +227,7 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 	item->op_paste = this->op_paste;
 
 	DATA_INFO* pd = nullptr;
-	// search for data_item with matching title and UNICODE format
+	// search for data_item with matching title and UNICODE or CF_TEXT format
 	// delete all other formats
 	for (DATA_INFO* p = item->child; p != nullptr; p = p->next) {
 		if (pd == nullptr && p->type == TYPE_DATA && p->format == CF_UNICODETEXT) {
@@ -380,11 +380,11 @@ void cl_item::set_modified(SYSTEMTIME st)
 
 SYSTEMTIME cl_item::get_modified() const
 {
-	SYSTEMTIME st = { 0,0,0, 0,0,0, 0 };
+	SYSTEMTIME st = { 0,0,0,0, 0,0,0, 0 };
 	if (_pi && _pi->type == TYPE_ITEM && ::FileTimeToSystemTimeCL(_pi->modified, st))
 		return st;
 
-	st = { 0,0,0, 0,0,0, 0 };
+	st = { 0,0,0,0, 0,0,0, 0 };
 	return st;
 }
 
@@ -546,7 +546,7 @@ bool FileTimeToSystemTimeCL(const FILETIME& ft, SYSTEMTIME& st)
 		return true;
 	}
 
-	st = { 0,0,0, 0,0,0, 0 };
+	st = { 0,0,0,0, 0,0,0, 0 };
 	return false;
 }
 

@@ -14,7 +14,7 @@ class clip_item
 public:
 	clip_item() {
 		itemtype = itemformat = op_modifiers = op_virtkey = op_paste = 0;
-		modified = { 0,0,0, 0,0,0, 0 };
+		modified = { 0,0,0,0, 0,0,0, 0 };
 	};
 
 	std::wstring title;

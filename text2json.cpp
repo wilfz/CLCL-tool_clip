@@ -95,7 +95,7 @@ void to_json(json& j, DATA_INFO* di) {
 	string title, formatname, textcontent, windowname;
 	UINT dataformat = 0;
 	SYSTEMTIME st = item.get_modified();
-	// convert TIMESTAMP_STRUCT to a string
+	// convert SYSTEMTIME to a string
 	string modify = utf16_to_utf8(
 		linguversa::string_format(TEXT("%04d-%02d-%02d %02d:%02d:%02d.%03d"), 
 			st.wYear,
