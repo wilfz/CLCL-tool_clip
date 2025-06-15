@@ -275,6 +275,31 @@ __declspec(dllexport) int CALLBACK load_json(const HWND hWnd, TOOL_EXEC_INFO* te
 
 		from_json(jdata, ci);
 
+		// Get registhistory_root
+		DATA_INFO* history_root = nullptr;
+		if (tdi->di->type == TYPE_ROOT 
+			&& (history_root = (DATA_INFO*)SendMessage(hWnd, WM_HISTORY_GET_ROOT, 0, 0))
+			&& tdi->di == history_root)
+		{
+			if (ci.itemtype == TYPE_ITEM) {
+				ret = ci.to_data_info(tdi->di, hWnd);
+				SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
+				return ret;
+			}
+
+			for (size_t i = 0; i < ci.children.size(); i++)
+			{
+				clip_item& child = ci.children[i];
+				if (child.itemtype != TYPE_ITEM)
+					continue;
+				ret = child.to_data_info(tdi->di, hWnd);
+				if (ret != TOOL_SUCCEED)
+					break;
+			}
+			SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
+			return ret;
+		}
+
 		ret = ci.to_data_info(tdi->di, hWnd);
 
 		// Notify regist/template changes

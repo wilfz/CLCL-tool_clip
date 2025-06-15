@@ -1,4 +1,4 @@
-
+#pragma once
 /* Include Files */
 #include "CLCLPlugin.h"
 #include <vector>

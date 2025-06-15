@@ -111,7 +111,7 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 	// both are folder and have the same name
 	if (this->itemtype == TYPE_FOLDER && item->type == TYPE_FOLDER 
 			&& item->title != nullptr && _wcsicmp(this->title.c_str(), item->title) == 0
-		|| this->itemtype == TYPE_ROOT && item->type == TYPE_FOLDER)
+		|| this->itemtype == TYPE_ROOT && (item->type == TYPE_FOLDER || item->type == TYPE_ROOT))
 	{
 		ret = merge_into( item, hWnd);
 		return ret;
