@@ -136,6 +136,11 @@ void to_json(json& j, DATA_INFO* di) {
 	if (di->type == TYPE_FOLDER || di->type == TYPE_ROOT) {
 		for (DATA_INFO* cdi = item.get_child(); cdi != nullptr; cdi = cdi->next)
 			children.push_back(cdi);
+
+		if (di->type == TYPE_ROOT && di->next == nullptr) {
+			to_json(j, children);
+			return;
+		}
 	}
 
 	j = json{
@@ -155,6 +160,9 @@ void to_json(json& j, DATA_INFO* di) {
 }
 
 void to_json(json& j, TOOL_DATA_INFO* tdi) {
+	if (tdi == nullptr)
+		return;
+
 	// single item
 	if (tdi->next == nullptr) {
 		if (tdi->di != nullptr)
