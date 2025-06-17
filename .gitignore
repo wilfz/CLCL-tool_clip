@@ -21,6 +21,9 @@ CVS/
 .#*
 .cvsignore
 
+# Postbuild step output
+tool_clip.txt
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
