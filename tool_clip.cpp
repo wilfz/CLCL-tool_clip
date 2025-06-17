@@ -111,6 +111,14 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 		tgi->call_type = CALLTYPE_VIEWER;
 		return TRUE;
 
+	case 6:
+		//lstrcpy(tgi->title, TEXT("Send to Clipboard"));
+		LoadString(hInst, IDS_SEND_TO_CLIPBOARD, tgi->title, BUF_SIZE - 1);
+		lstrcpy(tgi->func_name, TEXT("item_to_clipboard"));
+		lstrcpy(tgi->cmd_line, TEXT(""));
+		tgi->call_type = CALLTYPE_MENU;
+		return TRUE;
+
 	}
 	return FALSE;
 }
@@ -190,5 +198,25 @@ static BOOL dll_uninitialize(void)
 	return TRUE;
 }
 
+/*
+ * send to clipboard (without paste)
+ */
+__declspec(dllexport) int CALLBACK item_to_clipboard(const HWND hWnd, TOOL_EXEC_INFO* tei, TOOL_DATA_INFO* tdi)
+{
+	if (tdi == NULL) {
+		return TOOL_SUCCEED;
+	}
+
+	DATA_INFO* di = tdi->di;
+	if (di == NULL || (di->type != TYPE_ITEM && di->type != TYPE_DATA))
+		return TOOL_ERROR;
+
+	SendMessage(hWnd, WM_ITEM_TO_CLIPBOARD, 0, (LPARAM)di);
+
+	// Notify regist/template changes
+	SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
+
+	return TOOL_SUCCEED;
+}
 
 /* End of source */

@@ -17,3 +17,5 @@ EXPORTS
 
 	save_json
 	load_json
+
+	item_to_clipboard

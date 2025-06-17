@@ -90,6 +90,8 @@ void from_json(const json& j, clip_item& item) {
 
 
 void to_json(json& j, DATA_INFO* di) {
+	if (di == nullptr || di->type == TYPE_DATA)
+		return;
 	cl_item item(di);
 	// local UTF-8 interim variables
 	string title, formatname, textcontent, windowname;
@@ -165,7 +167,7 @@ void to_json(json& j, TOOL_DATA_INFO* tdi) {
 
 	// single item
 	if (tdi->next == nullptr) {
-		if (tdi->di != nullptr)
+		if (tdi->di != nullptr && tdi->di->type != TYPE_DATA)
 			to_json(j, tdi->di);
 		return;
 	}
@@ -173,7 +175,7 @@ void to_json(json& j, TOOL_DATA_INFO* tdi) {
 	// several items
 	list<DATA_INFO*> items;
 	for (TOOL_DATA_INFO* t = tdi; t != NULL; t = t->next) {
-		if (t->di == NULL)
+		if (t->di == NULL || t->di->type == TYPE_DATA)
 			continue;
 
 		items.push_back(t->di);
@@ -192,7 +194,7 @@ __declspec(dllexport) int CALLBACK save_json(const HWND hWnd, TOOL_EXEC_INFO* te
 		return TOOL_SUCCEED;
 	}
 
-	if (tdi->di == NULL)
+	if (tdi->di == NULL || tdi->di->type == TYPE_DATA)
 		return TOOL_ERROR;
 
 	int ret = TOOL_SUCCEED;
