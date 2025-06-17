@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Tool_Clip Add-On for CLCL Clipboard Manager"
-#define MyAppVersion "1.0.0.2"
+#define MyAppVersion "1.0.0.3"
 #define MyAppPublisher "WilfZim"
 #define MyAppURL "https://github.com/wilfz/CLCL-tool_clip"
 
@@ -36,6 +36,7 @@ Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 
 [Files]
 Source: "Release\tool_clip.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "tool_clip.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

@@ -73,6 +73,9 @@
       <ModuleDefinitionFile>.\tool_clip.def</ModuleDefinitionFile>
       <AdditionalDependencies>$(CoreLibraryDependencies);Shlwapi.lib;$(ProjectDir)query\odbcquery.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy README.md tool_clip.md</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
