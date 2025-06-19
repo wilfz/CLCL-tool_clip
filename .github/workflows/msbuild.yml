@@ -26,6 +26,8 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      id-token: write
 
     steps:
     - uses: actions/checkout@v4
@@ -141,4 +143,9 @@ jobs:
         # enabled this to avoid uploading sensitive information.
         # Optional. Default is 'false'
         include-hidden-files: false
+
+    - name: code sign with sigstore
+      uses: sigstore/gh-action-sigstore-python@v3.0.0
+      with:
+        inputs: Setup/setup*.exe
 
