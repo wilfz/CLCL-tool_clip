@@ -30,6 +30,9 @@
     <ClInclude Include="clipitem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="streamindent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tool_clip.cpp">

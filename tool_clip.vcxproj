@@ -99,6 +99,7 @@
     <ClInclude Include="clipitem.h" />
     <ClInclude Include="memory.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="streamindent.h" />
     <ClInclude Include="string.h" />
   </ItemGroup>
   <ItemGroup>
