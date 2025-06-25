@@ -36,9 +36,9 @@ Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 
 [Files]
 Source: "Release\tool_clip.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "tool_clip.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "Release\tool_clip.html"; DestDir: "{app}"; Flags: ignoreversion isreadme
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
-
+Name: "{group}\Tool_Clip Help"; Filename: "{app}\tool_clip.html"

@@ -74,7 +74,9 @@
       <AdditionalDependencies>$(CoreLibraryDependencies);Shlwapi.lib;$(ProjectDir)query\odbcquery.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy README.md tool_clip.txt</Command>
+      <Command>copy README.md tool_clip.txt
+pandoc --from=gfm --to=html5 README.md --output=Release\tool_clip.html
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
