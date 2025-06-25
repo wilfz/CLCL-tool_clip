@@ -39,15 +39,15 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: nuget restore ${{env.SOLUTION_FILE_PATH}}
 
+    - name: Help
+      uses: r-lib/actions/setup-pandoc@v2
+
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
 
-    - name: Help
-      uses: r-lib/actions/setup-pandoc@v2
-      
     - run: pandoc --from=gfm --to=html5 README.md --output=tool_clip.html
 
     - name: Compile .ISS to .EXE Installer
@@ -57,6 +57,7 @@ jobs:
 
     - run: |
         mv Release/tool_clip.dll Setup/ 
+        mv tool_clip.html Setup/ 
         cp README.md Setup/tool_clip.txt
 
     - name: Publish Setup
@@ -115,7 +116,7 @@ jobs:
         path: |
           Setup/*.dll
           Setup/*.txt
-          Setup/*.md
+          Setup/*.html
 
         # The desired behavior if no files are found using the provided path.
         # Available Options:
