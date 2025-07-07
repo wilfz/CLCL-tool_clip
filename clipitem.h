@@ -34,6 +34,7 @@ public:
 	int init(TOOL_DATA_INFO* tdi);
 	int to_data_info(DATA_INFO* item, HWND hWnd);
 	int merge_into(DATA_INFO* item, HWND hWnd);
+	static DATA_INFO* find_hotkey_item(DATA_INFO* di, UINT virtkey, UINT modifier);
 };
 
 class cl_mem

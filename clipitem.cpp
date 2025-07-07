@@ -219,7 +219,13 @@ int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 	cl_mem(item->title) = this->title;
 
 	// TODO: check if the same combination of op_modifiers and op_virtkey already exists.
-	// If so, ignore it here.
+	DATA_INFO* hotkey_item = nullptr;
+	if (this->op_virtkey) {
+		hotkey_item = find_hotkey_item((DATA_INFO*) ::SendMessage(hWnd, WM_REGIST_GET_ROOT, 0, 0),
+			this->op_virtkey, this->op_modifiers);
+	}
+	// If not found, set the hotkey to the current item
+	if (hotkey_item == nullptr)
 	{
 		item->op_modifiers = this->op_modifiers;
 		item->op_virtkey = this->op_virtkey;
@@ -287,6 +293,26 @@ int clip_item::merge_into(DATA_INFO* item, HWND hWnd)
 		}
 	}
 	return TOOL_SUCCEED;
+}
+
+DATA_INFO* clip_item::find_hotkey_item(DATA_INFO* di, UINT virtkey, UINT modifier)
+{
+	if (di == nullptr || di->type == TYPE_DATA || virtkey == 0) {
+		return nullptr; // no hotkey item in data
+	}
+	for (DATA_INFO* cdi = di->child; cdi != nullptr; cdi = cdi->next) {
+		if (cdi->type == TYPE_ITEM && cdi->op_virtkey == virtkey && cdi->op_modifiers == modifier) {
+			return cdi;
+		}
+		if (cdi->type == TYPE_FOLDER || cdi->type == TYPE_ROOT) {
+			DATA_INFO* p = find_hotkey_item(cdi, virtkey, modifier);
+			if (p != nullptr) {
+				return p;
+			}
+		}
+	}
+
+	return nullptr;
 }
 
 const wchar_t* cl_mem::operator=(const std::wstring& s)
