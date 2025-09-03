@@ -30,7 +30,13 @@
     <ClInclude Include="clipitem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="clipper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="streamindent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winwrappers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -57,6 +63,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="clipitem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="clipper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="clipregex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="winwrappers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

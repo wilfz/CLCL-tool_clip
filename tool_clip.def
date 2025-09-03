@@ -17,5 +17,9 @@ EXPORTS
 
 	save_json
 	load_json
+	save_clipper
 
 	item_to_clipboard
+
+	clipregex
+	clipregex_property

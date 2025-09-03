@@ -89,6 +89,20 @@ BEGIN
     EDITTEXT        IDC_EDIT_PWD,60,60,186,14,ES_PASSWORD | ES_AUTOHSCROLL
 END
 
+IDD_REPLACE DIALOGEX 0, 0, 305, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Reguläre Ausdrücke ersetzen"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Suchbegriff",IDC_STATIC,12,15,66,8
+    EDITTEXT        IDC_SEARCHEXPRESSION,84,12,210,14,ES_AUTOHSCROLL
+    LTEXT           "Erssetzung",IDC_STATIC,12,33,66,8
+    EDITTEXT        IDC_REPLACEEXPRESSION,84,30,210,14,ES_AUTOHSCROLL
+    GROUPBOX        "",IDC_STATIC,6,2,294,48
+    DEFPUSHBUTTON   "OK",IDOK,186,54,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,246,54,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -121,6 +135,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 98
     END
+
+    IDD_REPLACE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 298
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 68
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -141,6 +163,11 @@ BEGIN
 END
 
 IDD_ODBC_SETTINGS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_REPLACE AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -205,6 +232,8 @@ BEGIN
     IDS_SEND_TO_CLIPBOARD   "In Zwischenablage kopieren"
     IDS_LOAD_CLIPPER        "Clipper Backup importieren"
     IDS_SAVE_CLIPPER        "Im Clipper Format exportieren"
+    IDS_CLIPPER_HISTORY     "Clipper Verlauf"
+    IDS_REPLACE_REGEX       "Regulären Ausdruck ersetzen"
 END
 
 #endif    // German (Germany) resources
@@ -378,6 +407,10 @@ BEGIN
     IDS_SEND_TO_CLIPBOARD   "Send to clipboard"
     IDS_LOAD_CLIPPER        "Import Clipper Backup"
     IDS_SAVE_CLIPPER        "Export in Clipper Format"
+    IDS_CLIPPER_HISTORY     "Clipper's History"
+    IDS_DEFAULT_LIST_NAME   "Templates"
+    IDS_TAB_TO_INSERT       "Convert TAB to insert"
+    IDS_REPLACE_REGEX       "Replace regular expression"
 END
 
 #endif    // English (United States) resources

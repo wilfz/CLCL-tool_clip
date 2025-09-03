@@ -21,6 +21,12 @@ tstring ini_path;
 TCHAR whiteSpaceReplacement[BUF_SIZE];
 tstring connection_string;
 
+wstring clipper_history;
+string default_list_name;
+
+// wstring -> u16string -> string (utf8)
+std::string utf16_to_utf8(const std::wstring& utf16);
+
 /* Local Function Prototypes */
 static BOOL dll_initialize(void);
 static BOOL dll_uninitialize(void);
@@ -76,7 +82,7 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 		LoadString(hInst, IDS_TABSEPERATE_TO_HTML, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("tabSeparatedToHtmlTable"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
-		tgi->call_type = CALLTYPE_MENU | CALLTYPE_VIEWER;
+		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE | CALLTYPE_VIEWER;
 		return TRUE;
 
 	case 2:
@@ -112,11 +118,24 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 		return TRUE;
 
 	case 6:
-		//lstrcpy(tgi->title, TEXT("Send to Clipboard"));
+		LoadString(hInst, IDS_SAVE_CLIPPER, tgi->title, BUF_SIZE - 1);
+		lstrcpy(tgi->func_name, TEXT("save_clipper"));
+		lstrcpy(tgi->cmd_line, TEXT(""));
+		tgi->call_type = CALLTYPE_VIEWER;
+		return TRUE;
+
+	case 7:
 		LoadString(hInst, IDS_SEND_TO_CLIPBOARD, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("item_to_clipboard"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
 		tgi->call_type = CALLTYPE_MENU;
+		return TRUE;
+
+	case 8:
+		LoadString(hInst, IDS_REPLACE_REGEX, tgi->title, BUF_SIZE - 1);
+		lstrcpy(tgi->func_name, TEXT("clipregex"));
+		lstrcpy(tgi->cmd_line, TEXT(""));
+		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE | CALLTYPE_VIEWER;
 		return TRUE;
 
 	}
@@ -186,6 +205,16 @@ static BOOL dll_initialize(void)
 	connection_string.assign(conn);
 	if (connection_string.empty())
 		connection_string = linguversa::string_format(_T("Driver={SQLite3 ODBC Driver};Database=%s\\test.db3;"), ini_dir.c_str());
+
+	// Initialize global variables for clipper import/export
+	TCHAR clipper_history_buf[BUF_SIZE];
+	if (0 == ::GetPrivateProfileString(TEXT("Clipper"), TEXT("ClipperHistoryName"), TEXT(""), clipper_history_buf, BUF_SIZE - 1, ini_path.c_str()))
+		LoadString(hInst, IDS_CLIPPER_HISTORY, clipper_history_buf, BUF_SIZE - 1);
+	clipper_history.assign(clipper_history_buf);
+	TCHAR default_list_name_buf[BUF_SIZE];
+	if (0 == ::GetPrivateProfileString(TEXT("Clipper"), TEXT("DefaultListName"), TEXT(""), default_list_name_buf, BUF_SIZE - 1, ini_path.c_str()))
+		LoadString(hInst, IDS_DEFAULT_LIST_NAME, default_list_name_buf, BUF_SIZE - 1);
+	default_list_name = ::utf16_to_utf8(default_list_name_buf);
 
 	return TRUE;
 }

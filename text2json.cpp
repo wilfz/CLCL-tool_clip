@@ -6,6 +6,7 @@
 #endif
 #include "memory.h"
 #include "clipitem.h"
+#include "clipper.h"
 #include "query\lvstring.h"
 
 #include <fstream>
@@ -16,6 +17,10 @@ using namespace std;
 
 /* Global Variables */
 extern HINSTANCE hInst;
+
+// Forward declarations to clipper.cpp
+void to_json(json& j, const clipper_bkp& cb);
+void from_json(const json& j, clipper_bkp& cb);
 
 void to_json(json& j, const clip_item& item) {
 	// local UTF-8 interim variables
@@ -184,6 +189,88 @@ void to_json(json& j, TOOL_DATA_INFO* tdi) {
 	to_json(j, items);
 }
 
+int load_clcl_format(const HWND hWnd, const json& jdata, TOOL_DATA_INFO* tdi)
+{
+	if (tdi == NULL) {
+		return TOOL_SUCCEED;
+	}
+	if (tdi->di == NULL || tdi->di->type == TYPE_DATA)
+		return TOOL_ERROR;
+
+	int ret = TOOL_SUCCEED;
+	clip_item ci;
+	from_json(jdata, ci);
+
+	// Get history_root
+	DATA_INFO* history_root = nullptr;
+	if (tdi->di->type == TYPE_ROOT
+		&& (history_root = (DATA_INFO*)SendMessage(hWnd, WM_HISTORY_GET_ROOT, 0, 0))
+		&& tdi->di == history_root)
+	{
+		if (ci.itemtype == TYPE_ITEM) {
+			ret = ci.to_data_info(tdi->di, hWnd);
+			return ret;
+		}
+
+		for (size_t i = 0; i < ci.children.size(); i++)
+		{
+			clip_item& child = ci.children[i];
+			if (child.itemtype != TYPE_ITEM)
+				continue;
+			ret = child.to_data_info(tdi->di, hWnd);
+			if (ret != TOOL_SUCCEED)
+				break;
+		}
+		return ret;
+	}
+
+	ret = ci.to_data_info(tdi->di, hWnd);
+
+	return ret;
+}
+
+int load_clipper_format(const HWND hWnd, const json& jdata, TOOL_DATA_INFO* tdi)
+{
+	clipper_bkp cb;
+	clip_item ci;
+
+	int ret = TOOL_SUCCEED;
+
+	from_json(jdata, cb);
+	cb.to_item(ci);
+
+	DATA_INFO* template_root = (DATA_INFO*)SendMessage(hWnd, WM_REGIST_GET_ROOT, 0, 0);
+	if (tdi->di->type == TYPE_FOLDER || tdi->di == template_root) {
+		ret = ci.to_data_info(tdi->di, hWnd);
+		return ret;
+	}
+
+	if (tdi->di->type == TYPE_ROOT) {
+		// tdi->di is history_root, but we must not insert folder items there.
+		// Instead, we insert the items into the template_root item.
+		DATA_INFO* history_root = (DATA_INFO*)SendMessage(hWnd, WM_HISTORY_GET_ROOT, 0, 0);
+		if (history_root == nullptr || template_root == nullptr) {
+			return TOOL_ERROR; // no history root found
+		}
+		for (auto& child : ci.children) {
+			switch (child.itemtype) {
+			case TYPE_ITEM:
+				ret = child.to_data_info(history_root, hWnd);
+				break;
+			case TYPE_FOLDER:
+				ret = child.to_data_info(template_root, hWnd);
+				break;
+			default:
+				return TOOL_ERROR; // unsupported type
+			}
+		}
+
+		return ret;
+	}
+
+	return TOOL_ERROR; // unsupported type
+}
+
 
 /*
  * save_json
@@ -281,36 +368,15 @@ __declspec(dllexport) int CALLBACK load_json(const HWND hWnd, TOOL_EXEC_INFO* te
 		json jdata = json::parse(f);
 		f.close();
 
-		clip_item ci;
-
-		from_json(jdata, ci);
-
-		// Get registhistory_root
-		DATA_INFO* history_root = nullptr;
-		if (tdi->di->type == TYPE_ROOT 
-			&& (history_root = (DATA_INFO*)SendMessage(hWnd, WM_HISTORY_GET_ROOT, 0, 0))
-			&& tdi->di == history_root)
-		{
-			if (ci.itemtype == TYPE_ITEM) {
-				ret = ci.to_data_info(tdi->di, hWnd);
-				SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
-				return ret;
+		// Check whether it is a clipper backup file or a native CLC json file
+		if (jdata.contains("lists")) {
+			// It is a clipper backup file.
+			ret = load_clipper_format(hWnd, jdata, tdi);
 			}
-
-			for (size_t i = 0; i < ci.children.size(); i++)
-			{
-				clip_item& child = ci.children[i];
-				if (child.itemtype != TYPE_ITEM)
-					continue;
-				ret = child.to_data_info(tdi->di, hWnd);
-				if (ret != TOOL_SUCCEED)
-					break;
+		else {
+			// It is a native CLC json file.
+			ret = load_clcl_format(hWnd, jdata, tdi);
 			}
-			SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
-			return ret;
-		}
-
-		ret = ci.to_data_info(tdi->di, hWnd);
 
 		// Notify regist/template changes
 		SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);

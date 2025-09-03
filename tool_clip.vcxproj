@@ -99,10 +99,12 @@ pandoc --from=gfm --to=html5 Release\tool_clip.md --standalone --output=Release\
   <ItemGroup>
     <ClInclude Include="CLCLPlugin.h" />
     <ClInclude Include="clipitem.h" />
+    <ClInclude Include="clipper.h" />
     <ClInclude Include="memory.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="streamindent.h" />
     <ClInclude Include="string.h" />
+    <ClInclude Include="winwrappers.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="tool_clip.def" />
@@ -110,12 +112,15 @@ pandoc --from=gfm --to=html5 Release\tool_clip.md --standalone --output=Release\
   <ItemGroup>
     <ClCompile Include="cliphtml.cpp" />
     <ClCompile Include="clipitem.cpp" />
+    <ClCompile Include="clipper.cpp" />
+    <ClCompile Include="clipregex.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="text2json.cpp" />
     <ClCompile Include="tool_clip.cpp" />
     <ClCompile Include="whitespace.cpp" />
+    <ClCompile Include="winwrappers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="tool_clip.rc" />
