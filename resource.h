@@ -3,7 +3,6 @@
 // Used by tool_clip.rc
 //
 #define IDD_REPLACE_WHITESPACE          101
-#define IDD_CONVERT_WHITESPACE          102
 #define IDD_ODBC_SETTINGS               103
 #define IDD_TAB_INSERT                  104
 #define IDS_REPLACE_WHITESPACE          106
