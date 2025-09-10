@@ -453,7 +453,10 @@ void clipper_to_item(const clipper_item& ci, clip_item& item)
 
 void list_to_item(const clipper_list& cl, clip_item& item)
 {
-	item.itemtype = TYPE_FOLDER;
+	if (cl.clipboard == true)
+		item.itemtype = TYPE_ROOT;
+	else
+		item.itemtype = TYPE_FOLDER;
 	item.title = ::utf8_to_utf16(cl.name);
 	item.modified = { 0,0,0,0, 0,0,0, 0 };
 	item.children.clear();

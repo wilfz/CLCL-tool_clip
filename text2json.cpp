@@ -208,7 +208,7 @@ int load_clcl_format(const HWND hWnd, const json& jdata, TOOL_DATA_INFO* tdi)
 		&& tdi->di == history_root)
 	{
 		if (ci.itemtype == TYPE_ITEM) {
-			ret = ci.to_data_info(tdi->di, hWnd);
+			ret = ci.insert_into_history(hWnd);
 			return ret;
 		}
 
@@ -217,7 +217,7 @@ int load_clcl_format(const HWND hWnd, const json& jdata, TOOL_DATA_INFO* tdi)
 			clip_item& child = ci.children[i];
 			if (child.itemtype != TYPE_ITEM)
 				continue;
-			ret = child.to_data_info(tdi->di, hWnd);
+			ret = child.insert_into_history(hWnd);
 			if (ret != TOOL_SUCCEED)
 				break;
 		}
@@ -255,10 +255,18 @@ int load_clipper_format(const HWND hWnd, const json& jdata, TOOL_DATA_INFO* tdi)
 		for (auto& child : ci.children) {
 			switch (child.itemtype) {
 			case TYPE_ITEM:
-				ret = child.to_data_info(history_root, hWnd);
+				ret = child.insert_into_history(hWnd);
 				break;
 			case TYPE_FOLDER:
 				ret = child.to_data_info(template_root, hWnd);
+				break;
+			case TYPE_ROOT:
+				// Clipper's history to be inserted into CLCL history
+				for (auto& history_item : child.children) {
+					// insert history_item into history at the correct position 
+					// according to history_item.modified timestamp
+					ret = history_item.insert_into_history(hWnd);
+				}
 				break;
 			default:
 				return TOOL_ERROR; // unsupported type

@@ -32,8 +32,10 @@ public:
 	int op_paste;
 
 	int init(TOOL_DATA_INFO* tdi);
+	DATA_INFO* create_data_info(HWND hWnd);
 	int to_data_info(DATA_INFO* item, HWND hWnd);
 	int merge_into(DATA_INFO* item, HWND hWnd);
+	int insert_into_history(HWND hWnd);
 	static DATA_INFO* find_hotkey_item(DATA_INFO* di, UINT virtkey, UINT modifier);
 };
 

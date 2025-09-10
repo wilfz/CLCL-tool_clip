@@ -101,6 +101,54 @@ int clip_item::init(TOOL_DATA_INFO* tdi)
 	return TOOL_SUCCEED;
 }
 
+DATA_INFO* clip_item::create_data_info(HWND hWnd)
+{
+	DATA_INFO* di = nullptr;
+	switch (this->itemtype)
+	{
+	case TYPE_ITEM:
+	case TYPE_DATA:
+		// create an item ...
+		if ((di = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_ITEM, (LPARAM)this->title.c_str())) == NULL) {
+			return nullptr;
+		}
+		// initialize item's modified time to 0 (otherwise it's current time)
+		di->modified.dwHighDateTime = di->modified.dwLowDateTime = 0;
+		di->child = nullptr;
+		if (this->itemformat == CF_TEXT && (di->child = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_DATA, (LPARAM)TEXT("TEXT"))) == NULL) {
+			SendMessage(hWnd, WM_ITEM_FREE, 0, (LPARAM)di);
+			return nullptr;
+		}
+		else if (this->itemformat == CF_UNICODETEXT && (di->child = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_DATA, (LPARAM)TEXT("UNICODE TEXT"))) == NULL) {
+			SendMessage(hWnd, WM_ITEM_FREE, 0, (LPARAM)di);
+			return nullptr;
+		}
+
+		if (di->child)
+			di->child->next = nullptr;
+
+		break;
+
+	case TYPE_FOLDER:
+		// create a folder ...
+		if ((di = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_FOLDER, (LPARAM)this->title.c_str())) == NULL) {
+			return nullptr;
+		}
+		break;
+
+	default:
+		// we should never come here
+		return nullptr;
+	}
+
+	cl_item item(di);
+	if (this->itemformat == CF_UNICODETEXT || this->itemformat == CF_TEXT)
+		item.textcontent = this->textcontent;
+	item.modified = this->modified;
+	item.title = this->title;
+	return di;
+}
+
 int clip_item::to_data_info(DATA_INFO* item, HWND hWnd)
 {
 	if (item == nullptr)
@@ -292,6 +340,81 @@ int clip_item::merge_into(DATA_INFO* item, HWND hWnd)
 			return ret;
 		}
 	}
+	return TOOL_SUCCEED;
+}
+
+int clip_item::insert_into_history(HWND hWnd)
+{
+	DATA_INFO* history_root = (DATA_INFO*)SendMessage(hWnd, WM_HISTORY_GET_ROOT, 0, 0);
+	if (history_root == nullptr || this->itemtype != TYPE_ITEM)
+		return TOOL_ERROR;
+
+	FILETIME dbft;
+	long cmp = 0;
+	if (!::SystemTimeToFileTimeCL(this->modified, dbft)) {
+		return TOOL_ERROR;
+	}
+
+	// history is empty?
+	if (history_root->child == nullptr) {
+		DATA_INFO *item = history_root->child = create_data_info(hWnd);
+		if (item == nullptr)
+			return TOOL_ERROR;
+		item->next = nullptr;
+		return TOOL_SUCCEED;
+	}
+
+	cmp = ::CompareFileTime(&dbft, &(history_root->child)->modified);
+
+	// the newest item is equal to *this?
+	if (this->textcontent == cl_item(history_root->child).textcontent) {
+		if (cmp > 0)
+			history_root->child->modified = dbft;
+		return TOOL_SUCCEED;
+	}
+
+	// *this is newer than the newest item in history? 
+	if (cmp > 0) {
+		DATA_INFO* item = create_data_info(hWnd);
+		if (item == nullptr)
+			return TOOL_ERROR;
+		item->next = history_root->child;
+		history_root->child = item;
+	}
+
+	DATA_INFO* last_item = nullptr;
+	for (DATA_INFO* child = history_root->child; child != nullptr; child = child->next) {
+		if (child->next == nullptr) {
+			last_item = child;
+			break;
+		}
+
+		cmp = ::CompareFileTime(&dbft, &(child->next)->modified);
+
+		if (this->textcontent == cl_item(child->next).textcontent) {
+			if (cmp > 0)
+				child->next->modified = dbft;
+			return TOOL_SUCCEED;
+		}
+
+		// insert between child and child-next
+		if (cmp > 0) {
+			DATA_INFO* item = create_data_info(hWnd);
+			if (item == nullptr)
+				return TOOL_ERROR;
+			item->next = child->next;
+			child->next = item;
+			return TOOL_SUCCEED;
+		}
+	}
+
+	// append after last_item
+	DATA_INFO* item = create_data_info(hWnd);
+	if (item == nullptr)
+		return TOOL_ERROR;
+	item->next = last_item->next;
+	last_item->next = item;
+
 	return TOOL_SUCCEED;
 }
 
