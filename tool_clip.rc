@@ -80,7 +80,7 @@ END
 
 IDD_REPLACE DIALOGEX 0, 0, 305, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Regul‰re Ausdr¸cke ersetzen"
+CAPTION "Regul√§re Ausdr√ºcke ersetzen"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Suchbegriff",IDC_STATIC,12,15,66,8
@@ -155,8 +155,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,3
- PRODUCTVERSION 1,0,0,3
+ FILEVERSION 1,0,1,0
+ PRODUCTVERSION 1,0,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -173,12 +173,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "wilfzim"
             VALUE "FileDescription", "Plugin DLL for CLCL.exe"
-            VALUE "FileVersion", "1.0.0.3"
+            VALUE "FileVersion", "1.0.1.0"
             VALUE "InternalName", "tool_clip.dll"
             VALUE "LegalCopyright", "Copyright (C) 2024"
             VALUE "OriginalFilename", "tool_clip.dll"
             VALUE "ProductName", "ToolClip Plugin for CLCL"
-            VALUE "ProductVersion", "1.0.0.3"
+            VALUE "ProductVersion", "1.0.1.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -211,7 +211,7 @@ BEGIN
     IDS_CLIPPER_HISTORY     "Clipper Verlauf"
     IDS_DEFAULT_LIST_NAME   "Templates"
     IDS_TAB_TO_INSERT       "Convert TAB to insert"
-    IDS_REPLACE_REGEX       "Regul‰ren Ausdruck ersetzen"
+    IDS_REPLACE_REGEX       "Regul√§ren Ausdruck ersetzen"
 END
 
 #endif    // German (Germany) resources
@@ -335,8 +335,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,3
- PRODUCTVERSION 1,0,0,3
+ FILEVERSION 1,0,1,0
+ PRODUCTVERSION 1,0,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -353,12 +353,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "wilfzim"
             VALUE "FileDescription", "Plugin DLL for CLCL.exe"
-            VALUE "FileVersion", "1.0.0.3"
+            VALUE "FileVersion", "1.0.1.0"
             VALUE "InternalName", "tool_clip.dll"
             VALUE "LegalCopyright", "Copyright (C) 2024"
             VALUE "OriginalFilename", "tool_clip.dll"
             VALUE "ProductName", "ToolClip Plugin for CLCL"
-            VALUE "ProductVersion", "1.0.0.3"
+            VALUE "ProductVersion", "1.0.1.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -408,4 +408,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
