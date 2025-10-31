@@ -513,7 +513,7 @@ void cl_item::set_title(std::wstring s)
 {
 	assert(_pi);
 	assert(_pi->type == TYPE_ITEM || _pi->type == TYPE_FOLDER || _pi->type == TYPE_ROOT);
-	if (_pi != nullptr || _pi->type != TYPE_ITEM && _pi->type != TYPE_FOLDER && _pi->type != TYPE_ROOT)
+	if (_pi == nullptr || _pi->type != TYPE_ITEM && _pi->type != TYPE_FOLDER && _pi->type != TYPE_ROOT)
 		return;
 	cl_mem(_pi->title) = s;
 }

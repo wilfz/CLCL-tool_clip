@@ -141,8 +141,14 @@ void to_json(json& j, DATA_INFO* di) {
 
 	list<DATA_INFO*> children;
 	if (di->type == TYPE_FOLDER || di->type == TYPE_ROOT) {
-		for (DATA_INFO* cdi = item.get_child(); cdi != nullptr; cdi = cdi->next)
+		for (DATA_INFO* cdi = item.get_child(); cdi != nullptr; cdi = cdi->next) {
+			if (cdi->type == TYPE_ITEM
+				&& cl_item(cdi).find_format(CF_UNICODETEXT) == nullptr
+				&& cl_item(cdi).find_format(CF_TEXT) == nullptr)
+				continue; // skip items without text content
+			else
 			children.push_back(cdi);
+		}
 
 		if (di->type == TYPE_ROOT && di->next == nullptr) {
 			to_json(j, children);
