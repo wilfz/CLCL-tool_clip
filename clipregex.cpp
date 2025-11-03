@@ -23,8 +23,8 @@ extern HINSTANCE hInst;
 extern wstring ini_path;
 
 TOOL_EXEC_INFO* dlg_tei = nullptr;
-wchar_t searchexpr[BUF_SIZE];
-wchar_t replaceexpr[BUF_SIZE];
+wstring searchexpr;
+wstring replaceexpr;
 
 static BOOL CALLBACK dlg_replace_regex(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -37,10 +37,6 @@ __declspec(dllexport) int CALLBACK clipregex(const HWND hWnd, TOOL_EXEC_INFO* te
 		return TOOL_SUCCEED;
 	}
 
-	if (tei->cmd_line == nullptr || *tei->cmd_line == TEXT('\0')) {
-		return TOOL_CANCEL;
-	}
-
 	cl_item item(tdi->di);
 	wstring input = item.textcontent;
 	wstring wout;
@@ -48,14 +44,36 @@ __declspec(dllexport) int CALLBACK clipregex(const HWND hWnd, TOOL_EXEC_INFO* te
 	if (input.empty())
 		return TOOL_SUCCEED; // nothing more to do
 
-	wstring s(tei->cmd_line);
-	size_t nsep = s.find(RX_SEPARATOR);
+	wstring search_expression;
+	wstring replacement;
 
-	if (nsep == wstring::npos || nsep == 0)
-		return TOOL_SUCCEED; // nothing more to do
+	// If command line is given get search_expression and replacement from there
+	if (tei->cmd_line != nullptr && *tei->cmd_line != TEXT('\0')) {
+		wstring s(tei->cmd_line);
+		// cmd_line should consist of two parts separated by a special character
+		size_t nsep = s.find(RX_SEPARATOR);
 
-	wstring search_expression = s.substr(0, nsep);
-	wstring replacement = s.substr(nsep + 1);
+		if (nsep == wstring::npos || nsep == 0)
+			return TOOL_SUCCEED; // nothing more to do
+
+		search_expression = s.substr(0, nsep);
+		replacement = s.substr(nsep + 1);
+	}
+	else if ((tei->call_type & CALLTYPE_MENU) || (tei->call_type & CALLTYPE_VIEWER)) {
+		// cmd_line is empty and called from menu or viewer
+
+		// Show dialog 
+		if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_REPLACE), GetForegroundWindow(), dlg_replace_regex, (LPARAM)0) == FALSE)
+			return TOOL_CANCEL;
+
+		// and use searchexpr and replaceexpr set by dialog
+		search_expression = searchexpr;
+		replacement = replaceexpr;
+	}
+	else
+	{
+		return TOOL_ERROR;
+	}
 
 	auto re = std::wregex(search_expression);
 	wsmatch m;
@@ -116,8 +134,8 @@ static BOOL CALLBACK dlg_replace_regex(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		case IDOK:
 		{
 			// get searchexpr and replaceexpr from their GUI controls.
-			wstring searchexpr = wndctrl(hDlg, IDC_SEARCHEXPRESSION).get_window_text();
-			wstring replaceexpr = wndctrl(hDlg, IDC_REPLACEEXPRESSION).get_window_text();
+			searchexpr = wndctrl(hDlg, IDC_SEARCHEXPRESSION).get_window_text();
+			replaceexpr = wndctrl(hDlg, IDC_REPLACEEXPRESSION).get_window_text();
 
 			// Separate the two parts with the special char RX_SEPARATOR (defined above).
 			wstring s = searchexpr + wstring({ RX_SEPARATOR }) + replaceexpr;

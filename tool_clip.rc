@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#pragma code_page(65001)
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -17,7 +18,6 @@
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
-#pragma code_page(1252)
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ END
 
 IDD_REPLACE DIALOGEX 0, 0, 305, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Reguläre Ausdrücke ersetzen"
+CAPTION "Regulären Ausdruck ersetzen"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Suchbegriff",IDC_STATIC,12,15,66,8
@@ -210,7 +210,7 @@ BEGIN
     IDS_SAVE_CLIPPER        "Im Clipper Format exportieren"
     IDS_CLIPPER_HISTORY     "Clipper Verlauf"
     IDS_DEFAULT_LIST_NAME   "Templates"
-    IDS_TAB_TO_INSERT       "Convert TAB to insert"
+    IDS_TAB_TO_INSERT       "TAB in insert umwandeln"
     IDS_REPLACE_REGEX       "Regulären Ausdruck ersetzen"
 END
 
@@ -223,7 +223,6 @@ END
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
 
 /////////////////////////////////////////////////////////////////////////////
 //

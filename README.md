@@ -13,3 +13,12 @@ Currently it contains the following features for clipboard items:
 - replace with regular expressions
 
 To be continued ...
+
+### Update history
+- Ver 1.0.0.4 -> Ver 1.0.1.0
+	- Features:
+		- replace with regular expressions
+		- export to and import from android app "Clipper"
+	- Bugfix: 
+		- export only TEXT and UNICODE_TEXT items to json file
+		- in json-import replace empty title with (beginning of) text content

@@ -147,7 +147,7 @@ void to_json(json& j, DATA_INFO* di) {
 				&& cl_item(cdi).find_format(CF_TEXT) == nullptr)
 				continue; // skip items without text content
 			else
-			children.push_back(cdi);
+				children.push_back(cdi);
 		}
 
 		if (di->type == TYPE_ROOT && di->next == nullptr) {
@@ -386,11 +386,11 @@ __declspec(dllexport) int CALLBACK load_json(const HWND hWnd, TOOL_EXEC_INFO* te
 		if (jdata.contains("lists")) {
 			// It is a clipper backup file.
 			ret = load_clipper_format(hWnd, jdata, tdi);
-			}
+		}
 		else {
 			// It is a native CLC json file.
 			ret = load_clcl_format(hWnd, jdata, tdi);
-			}
+		}
 
 		// Notify regist/template changes
 		SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
