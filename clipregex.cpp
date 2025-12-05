@@ -75,12 +75,18 @@ __declspec(dllexport) int CALLBACK clipregex(const HWND hWnd, TOOL_EXEC_INFO* te
 		return TOOL_ERROR;
 	}
 
-	auto re = std::wregex(search_expression);
-	wsmatch m;
+	try {
+		auto re = std::wregex(search_expression);
+		wsmatch m;
 
-	if (regex_search( input, m, re) == true && m.ready() == true) {
-		wout = regex_replace(input, re, replacement); // , regex_constants::match_flag_type::format_sed);
-		item.set_textcontent(wout);
+		if (regex_search( input, m, re) == true && m.ready() == true) {
+			wout = regex_replace(input, re, replacement); // , regex_constants::match_flag_type::format_sed);
+			item.set_textcontent(wout);
+		}
+	}
+	catch (const std::exception& e) {
+		string s = e.what();
+		return TOOL_ERROR;
 	}
 
 	return TOOL_SUCCEED;
