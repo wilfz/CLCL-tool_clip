@@ -212,6 +212,7 @@ BEGIN
     IDS_DEFAULT_LIST_NAME   "Templates"
     IDS_TAB_TO_INSERT       "TAB in insert umwandeln"
     IDS_REPLACE_REGEX       "Regulären Ausdruck ersetzen"
+    IDS_ERROR_IN_REGEX      "Fehler in Regulärem Ausdruck"
 END
 
 #endif    // German (Germany) resources
@@ -391,6 +392,7 @@ BEGIN
     IDS_DEFAULT_LIST_NAME   "Templates"
     IDS_TAB_TO_INSERT       "Convert TAB to insert"
     IDS_REPLACE_REGEX       "Replace regular expression"
+    IDS_ERROR_IN_REGEX      "Error in RegEx evaluation"
 END
 
 #endif    // English (United States) resources

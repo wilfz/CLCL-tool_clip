@@ -1,7 +1,7 @@
 
 /* Include Files */
 #include "CLCLPlugin.h"
-#ifndef IDD_REPLACE_WHITESPACE
+#ifndef IDD_REPLACE
 #include "resource.h"
 #endif
 #include <string>
@@ -10,6 +10,7 @@
 #include "winwrappers.h"
 #include "clipitem.h"
 #include "memory.h"
+#include "string.h"
 
 using namespace std;
 
@@ -54,7 +55,7 @@ __declspec(dllexport) int CALLBACK clipregex(const HWND hWnd, TOOL_EXEC_INFO* te
 		size_t nsep = s.find(RX_SEPARATOR);
 
 		if (nsep == wstring::npos || nsep == 0)
-			return TOOL_SUCCEED; // nothing more to do
+			return TOOL_ERROR; // nothing more to do
 
 		search_expression = s.substr(0, nsep);
 		replacement = s.substr(nsep + 1);
@@ -86,6 +87,17 @@ __declspec(dllexport) int CALLBACK clipregex(const HWND hWnd, TOOL_EXEC_INFO* te
 	}
 	catch (const std::exception& e) {
 		string s = e.what();
+		TCHAR ts_what[BUF_SIZE + 1];
+		TCHAR msg_caption[BUF_SIZE];
+		LoadString(hInst, IDS_ERROR_IN_REGEX, msg_caption, BUF_SIZE - 1);
+		int len = char_to_tchar(s.c_str(), ts_what, BUF_SIZE);
+		if (len > 0)
+			MessageBox(
+				NULL, //[in, optional] HWND    hWnd,
+				ts_what,
+				TEXT("Error in RegEx evaluation"),
+				MB_OK | MB_ICONEXCLAMATION);
+
 		return TOOL_ERROR;
 	}
 

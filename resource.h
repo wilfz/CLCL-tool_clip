@@ -19,6 +19,7 @@
 #define IDS_TAB_TO_INSERT               117
 #define IDS_REPLACE_REGEX               118
 #define IDD_TRANSLATE                   119
+#define IDS_ERROR_IN_REGEX              120
 #define IDD_REPLACE                     121
 #define IDC_LIST_ACTION                 1000
 #define IDC_STATIC_REPLACEMENT          1001
