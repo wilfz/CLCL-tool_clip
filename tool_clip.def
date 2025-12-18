@@ -19,5 +19,7 @@ EXPORTS
 
 	item_to_clipboard
 
+	show_in_viewer
+
 	clipregex
 	clipregex_property

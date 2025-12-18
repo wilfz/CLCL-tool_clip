@@ -132,6 +132,13 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 		return TRUE;
 
 	case 8:
+		LoadString(hInst, IDS_SHOW_IN_VIEWER, tgi->title, BUF_SIZE - 1);
+		lstrcpy(tgi->func_name, TEXT("show_in_viewer"));
+		lstrcpy(tgi->cmd_line, TEXT(""));
+		tgi->call_type = CALLTYPE_MENU;
+		return TRUE;
+
+	case 9:
 		LoadString(hInst, IDS_REPLACE_REGEX, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("clipregex"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
@@ -244,6 +251,28 @@ __declspec(dllexport) int CALLBACK item_to_clipboard(const HWND hWnd, TOOL_EXEC_
 
 	// Notify regist/template changes
 	SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
+
+	return TOOL_SUCCEED;
+}
+
+/*
+ * show in viewer
+ */
+__declspec(dllexport) int CALLBACK show_in_viewer(const HWND hWnd, TOOL_EXEC_INFO* tei, TOOL_DATA_INFO* tdi)
+{
+	if (tdi == NULL) {
+		return TOOL_SUCCEED;
+	}
+
+	DATA_INFO* di = tdi->di;
+	if (di == NULL || (di->type != TYPE_ITEM && di->type != TYPE_DATA))
+		return TOOL_ERROR;
+
+	SendMessage(hWnd, WM_VIEWER_SHOW, 0, 0);
+	SendMessage(hWnd, WM_VIEWER_SELECT_ITEM, 0, (LPARAM)di);
+
+	// Notify regist/template changes
+	//SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
 
 	return TOOL_SUCCEED;
 }

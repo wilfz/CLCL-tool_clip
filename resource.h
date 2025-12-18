@@ -21,6 +21,7 @@
 #define IDD_TRANSLATE                   119
 #define IDS_ERROR_IN_REGEX              120
 #define IDD_REPLACE                     121
+#define IDS_SHOW_IN_VIEWER              122
 #define IDC_LIST_ACTION                 1000
 #define IDC_STATIC_REPLACEMENT          1001
 #define IDC_EDIT_REPLACEMENT            1002

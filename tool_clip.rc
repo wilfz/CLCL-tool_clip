@@ -213,6 +213,7 @@ BEGIN
     IDS_TAB_TO_INSERT       "TAB in insert umwandeln"
     IDS_REPLACE_REGEX       "Regulären Ausdruck ersetzen"
     IDS_ERROR_IN_REGEX      "Fehler in Regulärem Ausdruck"
+    IDS_SHOW_IN_VIEWER      "Im Viewer anzeigen"
 END
 
 #endif    // German (Germany) resources
@@ -393,6 +394,7 @@ BEGIN
     IDS_TAB_TO_INSERT       "Convert TAB to insert"
     IDS_REPLACE_REGEX       "Replace regular expression"
     IDS_ERROR_IN_REGEX      "Error in RegEx evaluation"
+    IDS_SHOW_IN_VIEWER      "Show in Viewer"
 END
 
 #endif    // English (United States) resources
@@ -409,5 +411,4 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-
 
