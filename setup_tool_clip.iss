@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Tool_Clip Add-On for CLCL Clipboard Manager"
-#define MyAppVersion "1.0.1.0"
+#define MyAppVersion "1.0.2.0"
 #define MyAppPublisher "WilfZim"
 #define MyAppURL "https://github.com/wilfz/CLCL-tool_clip"
 
