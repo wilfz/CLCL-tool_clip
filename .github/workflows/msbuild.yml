@@ -59,7 +59,7 @@ jobs:
         mv Release/tool_clip.dll Setup/ 
         mv Release/tool_clip.html Setup/ 
         cp README.md Setup/tool_clip.txt
-        cp LICENSE Setup/LICENSE
+        cp LICENSE Setup/License(Tool_clip).txt
 
     - name: Publish Setup
       uses: actions/upload-artifact@v4
@@ -72,7 +72,6 @@ jobs:
         # Required.
         path: |
           Setup/setup*.exe
-          Setup/LICENSE
 
         # The desired behavior if no files are found using the provided path.
         # Available Options:
@@ -119,7 +118,7 @@ jobs:
           Setup/*.dll
           Setup/*.txt
           Setup/*.html
-          Setup/LICENSE
+          Setup/License(Tool_clip).txt
 
         # The desired behavior if no files are found using the provided path.
         # Available Options:

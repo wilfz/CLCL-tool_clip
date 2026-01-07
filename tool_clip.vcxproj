@@ -76,6 +76,7 @@
     <PostBuildEvent>
       <Command>copy README.md Release\tool_clip.md
 pandoc --from=gfm --to=html5 Release\tool_clip.md --standalone --output=Release\tool_clip.html
+copy LICENSE Release\License(Tool_clip).txt
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
