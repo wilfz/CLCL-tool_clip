@@ -214,6 +214,7 @@ BEGIN
     IDS_REPLACE_REGEX       "Regulären Ausdruck ersetzen"
     IDS_ERROR_IN_REGEX      "Fehler in Regulärem Ausdruck"
     IDS_SHOW_IN_VIEWER      "Im Viewer anzeigen"
+    IDS_EXPAND_VARIABLES    "Variablen expandieren"
 END
 
 #endif    // German (Germany) resources
@@ -395,6 +396,7 @@ BEGIN
     IDS_REPLACE_REGEX       "Replace regular expression"
     IDS_ERROR_IN_REGEX      "Error in RegEx evaluation"
     IDS_SHOW_IN_VIEWER      "Show in Viewer"
+    IDS_EXPAND_VARIABLES    "Expand Variables"
 END
 
 #endif    // English (United States) resources

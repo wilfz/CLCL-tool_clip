@@ -3,7 +3,8 @@
 #include "CLCLPlugin.h"
 #include <string>
 #include <cassert>
-#include "query\tstring.h"
+#include <tchar.h>
+#include "string.h"
 
 using namespace std;
 

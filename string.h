@@ -53,5 +53,11 @@ int str2hash(const TCHAR *str);
 BOOL str_match(const TCHAR *Ptn, const TCHAR *Str);
 BOOL Trim(TCHAR *buf);
 
+#ifdef UNICODE
+#define tstring wstring
+#else
+#define tstring string
+#endif
+
 #endif
 /* End of source */

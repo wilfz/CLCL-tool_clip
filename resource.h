@@ -22,6 +22,7 @@
 #define IDS_ERROR_IN_REGEX              120
 #define IDD_REPLACE                     121
 #define IDS_SHOW_IN_VIEWER              122
+#define IDS_EXPAND_VARIABLES            123
 #define IDC_LIST_ACTION                 1000
 #define IDC_STATIC_REPLACEMENT          1001
 #define IDC_EDIT_REPLACEMENT            1002
@@ -50,7 +51,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        123
+#define _APS_NEXT_RESOURCE_VALUE        124
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1028
 #define _APS_NEXT_SYMED_VALUE           101
