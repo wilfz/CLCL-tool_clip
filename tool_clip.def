@@ -23,3 +23,5 @@ EXPORTS
 
 	clipregex
 	clipregex_property
+
+	expand_envvar

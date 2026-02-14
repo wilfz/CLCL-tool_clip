@@ -116,6 +116,7 @@ copy LICENSE Release\License(Tool_clip).txt
     <ClCompile Include="clipper.cpp" />
     <ClCompile Include="clipregex.cpp" />
     <ClCompile Include="database.cpp" />
+    <ClCompile Include="expandenvvar.cpp" />
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="text2json.cpp" />

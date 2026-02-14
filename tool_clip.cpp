@@ -145,6 +145,13 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE | CALLTYPE_VIEWER;
 		return TRUE;
 
+	case 10:
+		lstrcpy(tgi->title, TEXT("Expand Environment Variables"));
+		//LoadString(hInst, IDS_TABSEPERATE_TO_HTML, tgi->title, BUF_SIZE - 1);
+		lstrcpy(tgi->func_name, TEXT("expand_envvar"));
+		lstrcpy(tgi->cmd_line, TEXT(""));
+		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE | CALLTYPE_VIEWER;
+		return TRUE;
 	}
 	return FALSE;
 }

@@ -20,10 +20,13 @@ using namespace std;
 // within that string.
 #define RX_SEPARATOR L'\x1f'
 
+// global variables:
 extern HINSTANCE hInst;
 extern wstring ini_path;
 
 TOOL_EXEC_INFO* dlg_tei = nullptr;
+
+// dialog variables:
 wstring searchexpr;
 wstring replaceexpr;
 
@@ -60,6 +63,7 @@ __declspec(dllexport) int CALLBACK clipregex(const HWND hWnd, TOOL_EXEC_INFO* te
 		search_expression = s.substr(0, nsep);
 		replacement = s.substr(nsep + 1);
 	}
+	// otherwise show dialog and get search_expression and replacement from there
 	else if ((tei->call_type & CALLTYPE_MENU) || (tei->call_type & CALLTYPE_VIEWER)) {
 		// cmd_line is empty and called from menu or viewer
 
@@ -76,6 +80,7 @@ __declspec(dllexport) int CALLBACK clipregex(const HWND hWnd, TOOL_EXEC_INFO* te
 		return TOOL_ERROR;
 	}
 
+	// now perform the regex search and replace
 	try {
 		auto re = std::wregex(search_expression);
 		wsmatch m;
@@ -155,7 +160,7 @@ static BOOL CALLBACK dlg_replace_regex(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			searchexpr = wndctrl(hDlg, IDC_SEARCHEXPRESSION).get_window_text();
 			replaceexpr = wndctrl(hDlg, IDC_REPLACEEXPRESSION).get_window_text();
 
-			// Separate the two parts with the special char RX_SEPARATOR (defined above).
+			// Separate the two parts by the special char RX_SEPARATOR (defined above).
 			wstring s = searchexpr + wstring({ RX_SEPARATOR }) + replaceexpr;
 
 			// By returning the content to tei->cmdline we enable CLCLSet.exe 
