@@ -2,12 +2,16 @@
 #include "CLCLPlugin.h"
 #include <string>
 #include <cassert>
+#include <map>
 #include <tchar.h>
 #include "string.h"
+#include "clipitem.h"
+
 
 using namespace std;
 
 // forward declarations of local functions and classes
+tstring select_macro(const HWND hWnd, const tstring& folder);
 void expand_macros(tstring& s);
 
 /*
@@ -27,7 +31,7 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 	DATA_INFO* di;
 	int ret = TOOL_SUCCEED;
 
-	if (tdi == nullptr)
+	if (tdi == nullptr || tei == nullptr)
 		return TOOL_ERROR;
 
 	di = tdi->di;
@@ -37,13 +41,17 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 
 	// If command line is given get the macro to be expanded from there.
 	if (tei->cmd_line != nullptr && *tei->cmd_line != TEXT('\0')) {
-		// TODO: Open the template folder and look for a folder named like the command line, 
+		cl_item item(tdi->di);
+		tstring clipboard = item.textcontent;
+
+		// Open the template folder and look for a folder named like the command line, 
 		// if it exists, select a macro from there and expand it.
 		tstring folder(tei->cmd_line);
-		tstring macro;
+		tstring macro = select_macro(hWnd, folder);
 
 		// If no such folder exists, use command line itself as macro.
-		macro.assign(tei->cmd_line);
+		if (macro.empty())
+			return TOOL_CANCEL;
 
 		// Just find out the size of memory to be allocated in the next call.
 		DWORD len = ::ExpandEnvironmentStrings(macro.c_str(), NULL, 0);
@@ -62,40 +70,22 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 		assert(len == expanded.length() + 1);
 		delete[] tmp;
 
-		// Replace %DATE%, %TIME%, and %CLIPBOARD% with apprpriate strings
+		// Replace %DATE%, %TIME% with apprpriate strings
 		expand_macros(expanded);
+
+		// Now replace all occurences of %CLIPBOARD% with the value of the currrent clipboard
+		size_t p_start, p_end;
+		while ((p_start = expanded.find(TEXT("%CLIPBOARD%"))) != tstring::npos) {
+			if (clipboard.length() > 0) {
+				expanded = expanded.substr(0, p_start) + clipboard 
+					+ expanded.substr(p_start + 11);
+			}
+		}
 
 		len = expanded.length() + 1; // include terminating null
 
-		// Copy expanded.c_str() to to_mem
-		HANDLE hnd = NULL;
-		// reserve memory for copy target
-		if ((hnd = GlobalAlloc(GHND, sizeof(TCHAR) * len)) == NULL) {
-			return TOOL_ERROR;
-		}
-
-		TCHAR* to_mem = nullptr;
-		if ((to_mem = (TCHAR*)GlobalLock(hnd)) == NULL) {
-			GlobalFree(hnd);
-			return TOOL_ERROR;
-		}
-
-		_tcscpy_s(to_mem, len, expanded.c_str());
-
-		GlobalUnlock(hnd);
-
-		di = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_CREATE, TYPE_DATA, (LPARAM)TEXT("UNICODE TEXT"));
-
-		if (di == nullptr) {
-			GlobalUnlock(to_mem);
-			GlobalFree(to_mem);
-			return TOOL_ERROR;
-		}
-
-		di->data = to_mem;
-		di->size = len * sizeof(TCHAR); // include terminating null
-
-		SendMessage(hWnd, WM_ITEM_TO_CLIPBOARD, 0, (LPARAM)di);
+		item.set_textcontent(expanded);
+		//SendMessage(hWnd, WM_ITEM_TO_CLIPBOARD, 0, (LPARAM)di);
 
 		// Notify that data was modified
 		ret |= TOOL_DATA_MODIFIED;
@@ -121,7 +111,7 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 		// if item is a history oder registry item (CALLTYPE_HISTORY oder CALLTYPE_REGIST)
 		// leave item as it is, modify copy of it
 		// and insert as newest into history
-		if (tei->call_type == CALLTYPE_HISTORY || tei->call_type == CALLTYPE_REGIST) {
+		if ((tei->call_type & CALLTYPE_VIEWER) != 0) {
 			di = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_COPY, 0, (LPARAM)di);
 		}
 
@@ -158,7 +148,7 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 		assert(len == expanded.length() + 1);
 		delete[] tmp;
 
-		// Replace %DATE%, %TIME%, and %CLIPBOARD% with apprpriate strings
+		// Replace %DATE%, and %TIME% with apprpriate strings
 		expand_macros(expanded);
 
 		len = expanded.length() + 1; // include terminating null
@@ -197,6 +187,64 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 	return ret;
 }
 
+tstring select_macro(const HWND hWnd, const tstring& folder)
+{
+	// Get history_root
+	DATA_INFO* registry_root = (DATA_INFO*)SendMessage(hWnd, WM_REGIST_GET_ROOT, 0, 0);
+	if (registry_root == nullptr)
+		return tstring();
+
+	DATA_INFO* fdi;
+	for (fdi = registry_root->child; fdi != nullptr; fdi = fdi->next) {
+		if (fdi->title == nullptr)
+			continue;
+		if (_tcsicmp(fdi->title, folder.c_str()) == 0)
+			break;
+	}
+
+	if (fdi == nullptr)
+		return tstring();
+
+	if (fdi->type == TYPE_ITEM)
+		return cl_item(fdi).get_textcontent();
+
+	// メニューの作成
+	// Creating a menu
+	HMENU hMenu = CreatePopupMenu();
+	map<unsigned int, tstring> macro;
+	unsigned int i = 1;
+
+	// fill menu with the folder items
+	for (DATA_INFO* di = fdi->child; di != nullptr; di = di->next) {
+		//DATA_INFO* uci = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_GET_FORMAT_TO_ITEM,
+		//	(WPARAM)TEXT("UNICODE TEXT"), (LPARAM)di);
+		cl_item mi(di);
+		if (mi.itemtype == TYPE_FOLDER)
+			continue;
+
+		tstring macro_name = mi.get_title();
+		if (mi.title.empty())
+			macro_name = mi.get_textcontent().substr(0, 48);
+		macro[i] = mi.get_textcontent();
+		AppendMenu(hMenu, MF_STRING, i++, macro_name.c_str());
+	}
+
+	// メニュー表示
+	// Display menu
+	HWND hCurrentWnd = GetForegroundWindow();
+	SetForegroundWindow(hWnd);
+	ShowWindow(hWnd, SW_HIDE);
+	POINT apos;
+	GetCursorPos((LPPOINT)&apos);
+	i = TrackPopupMenu(hMenu, TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD, apos.x, apos.y, 0, hWnd, NULL);
+	DestroyMenu(hMenu);
+	SetForegroundWindow(hCurrentWnd);
+	if (i <= 0) {
+		return tstring();
+	}
+	return macro[i];
+}
+
 // Replace %DATE%, %TIME%, and %CLIPBOARD% with apprpriate strings
 void expand_macros(tstring& s)
 {
@@ -204,7 +252,7 @@ void expand_macros(tstring& s)
 	GetLocalTime(&current);
 	TCHAR date[BUF_SIZE];
 	// Get the default format for date.
-	int lDate = GetDateFormatEx(
+	int len_dt = GetDateFormatEx(
 		LOCALE_NAME_USER_DEFAULT,
 		DATE_SHORTDATE,
 		&current,
@@ -217,7 +265,7 @@ void expand_macros(tstring& s)
 	size_t p_start, p_end;
 	// Replace all occurences of %DATE% with the default format for dates.
 	while ((p_start = s.find(TEXT("%DATE%"))) != tstring::npos) {
-		if (lDate > 0) {
+		if (len_dt > 0) {
 			s = s.substr(0, p_start) + tstring(date) + s.substr(p_start + 6);
 			//s.replace(p_start, 6, buf);
 		}
@@ -229,7 +277,7 @@ void expand_macros(tstring& s)
 			&& (p_end = s.find(TEXT("%"), p_start + 6)) != tstring::npos) {
 
 		tstring format = s.substr(p_start + 6, p_end - p_start - 6);
-		lDate = GetDateFormatEx(
+		len_dt = GetDateFormatEx(
 			LOCALE_NAME_USER_DEFAULT,
 			0,
 			&current,
@@ -239,14 +287,49 @@ void expand_macros(tstring& s)
 			nullptr
 		);
 
-		if (lDate > 0) {
+		if (len_dt > 0) {
 			s = s.substr(0, p_start) + tstring(date) + s.substr(p_end + 1);
 		}
 	}
 
-	// TODO: Add similar replacement for %TIME% and %CLIPBOARD%
+	TCHAR time[BUF_SIZE];
+	// Get the current time in default format.
+	len_dt = GetTimeFormatEx(
+		LOCALE_NAME_USER_DEFAULT,
+		TIME_FORCE24HOURFORMAT,
+		&current,
+		nullptr,
+		time,
+		BUF_SIZE
+	);
+
+	// Replace all occurences of %TIME% with the default format for time.
+	while ((p_start = s.find(TEXT("%TIME%"))) != tstring::npos) {
+		if (len_dt > 0) {
+			s = s.substr(0, p_start) + tstring(time) + s.substr(p_start + 6);
+			//s.replace(p_start, 6, buf);
+		}
+	}
+
 	// Replace all occurences of %TIME:{format}% with the formatted time. {format} must comply with 
 	// https://learn.microsoft.com/en-us/windows/win32/api/datetimeapi/nf-datetimeapi-gettimeformatex
+	while ((p_start = s.find(TEXT("%TIME:"))) != tstring::npos
+		&& (p_end = s.find(TEXT("%"), p_start + 6)) != tstring::npos) {
+
+		tstring format = s.substr(p_start + 6, p_end - p_start - 6);
+		len_dt = GetTimeFormatEx(
+			LOCALE_NAME_USER_DEFAULT,
+			0,
+			&current,
+			format.c_str(),
+			time,
+			BUF_SIZE
+		);
+
+		if (len_dt > 0) {
+			s = s.substr(0, p_start) + tstring(time) + s.substr(p_end + 1);
+		}
+	}
 
 	return;
 }
