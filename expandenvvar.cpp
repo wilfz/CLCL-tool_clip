@@ -74,7 +74,7 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 		expand_macros(expanded);
 
 		// Now replace all occurences of %CLIPBOARD% with the value of the currrent clipboard
-		size_t p_start, p_end;
+		size_t p_start;
 		while ((p_start = expanded.find(TEXT("%CLIPBOARD%"))) != tstring::npos) {
 			if (clipboard.length() > 0) {
 				expanded = expanded.substr(0, p_start) + clipboard 
@@ -194,6 +194,7 @@ tstring select_macro(const HWND hWnd, const tstring& folder)
 	if (registry_root == nullptr)
 		return tstring();
 
+	// Find the folder containing the macros
 	DATA_INFO* fdi;
 	for (fdi = registry_root->child; fdi != nullptr; fdi = fdi->next) {
 		if (fdi->title == nullptr)
@@ -203,21 +204,24 @@ tstring select_macro(const HWND hWnd, const tstring& folder)
 	}
 
 	if (fdi == nullptr)
-		return tstring();
+		return tstring(); // nothing found
 
+	// if it's an item return its text content
 	if (fdi->type == TYPE_ITEM)
 		return cl_item(fdi).get_textcontent();
+
+	if (fdi->type != TYPE_FOLDER)
+		return tstring(); // what else can it be?
 
 	// メニューの作成
 	// Creating a menu
 	HMENU hMenu = CreatePopupMenu();
+	// this map will contain macros which can be expanded
 	map<unsigned int, tstring> macro;
-	unsigned int i = 1;
+	unsigned int i = 0;
 
 	// fill menu with the folder items
 	for (DATA_INFO* di = fdi->child; di != nullptr; di = di->next) {
-		//DATA_INFO* uci = (DATA_INFO*)SendMessage(hWnd, WM_ITEM_GET_FORMAT_TO_ITEM,
-		//	(WPARAM)TEXT("UNICODE TEXT"), (LPARAM)di);
 		cl_item mi(di);
 		if (mi.itemtype == TYPE_FOLDER)
 			continue;
@@ -225,8 +229,14 @@ tstring select_macro(const HWND hWnd, const tstring& folder)
 		tstring macro_name = mi.get_title();
 		if (mi.title.empty())
 			macro_name = mi.get_textcontent().substr(0, 48);
-		macro[i] = mi.get_textcontent();
-		AppendMenu(hMenu, MF_STRING, i++, macro_name.c_str());
+		macro[++i] = mi.get_textcontent();
+		AppendMenu(hMenu, MF_STRING, i, macro_name.c_str());
+	}
+
+	//  no need to display an empty menu
+	if (i == 0) {
+		DestroyMenu(hMenu);
+		return tstring(); // nothing found
 	}
 
 	// メニュー表示
@@ -242,10 +252,12 @@ tstring select_macro(const HWND hWnd, const tstring& folder)
 	if (i <= 0) {
 		return tstring();
 	}
+
+	// after all this is the text content to be expanded
 	return macro[i];
 }
 
-// Replace %DATE%, %TIME%, and %CLIPBOARD% with apprpriate strings
+// Replace %DATE%, and %TIME% with apprpriate strings
 void expand_macros(tstring& s)
 {
 	SYSTEMTIME current;
