@@ -544,12 +544,12 @@ void cl_item::set_windowname(std::wstring s)
 	}
 }
 
-void cl_item::set_formatname(std::wstring s)
-{
-	if (_pi && _pi->type == TYPE_DATA) {
-		cl_mem(_pi->format_name) = s;
-	}
-}
+//void cl_item::set_formatname(std::wstring s)
+//{
+//	if (_pi && _pi->type == TYPE_DATA) {
+//		cl_mem(_pi->format_name) = s;
+//	}
+//}
 
 void cl_item::set_textcontent(std::wstring str)
 {

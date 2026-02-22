@@ -126,9 +126,11 @@ public:
 	};
 
 	// TYPE_DATA:
-	void set_formatname(std::wstring s);
 	inline std::wstring get_formatname() const {
 		return _pi && _pi->format_name ? std::wstring(_pi->format_name) : std::wstring();
+	};
+	inline UINT get_format() const {
+		return _pi ? _pi->format : 0;
 	};
 
 	// TYPE_ITEM or TYPE_DATA:
@@ -145,7 +147,7 @@ public:
 	__declspec(property(get = get_op_modifiers, put = set_op_modifiers)) UINT op_modifiers;
 	__declspec(property(get = get_op_virtkey, put = set_op_virtkey)) UINT op_virtkey;
 	__declspec(property(get = get_op_paste, put = set_op_paste)) int op_paste;
-	__declspec(property(get = get_formatname, put = set_formatname)) std::wstring formatname;
+	__declspec(property(get = get_formatname)) std::wstring formatname;
 	__declspec(property(get = get_textcontent, put = set_textcontent)) std::wstring textcontent;
 
 private:

@@ -24,6 +24,10 @@ tstring connection_string;
 wstring clipper_history;
 string default_list_name;
 
+TCHAR searchbuf[BUF_SIZE];
+TCHAR replacebuf[BUF_SIZE];
+
+
 // wstring -> u16string -> string (utf8)
 std::string utf16_to_utf8(const std::wstring& utf16);
 
@@ -149,7 +153,7 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 		LoadString(hInst, IDS_EXPAND_VARIABLES, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("expand_envvar"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
-		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE | CALLTYPE_VIEWER;
+		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE;
 		return TRUE;
 	}
 	return FALSE;
@@ -228,6 +232,10 @@ static BOOL dll_initialize(void)
 	if (0 == ::GetPrivateProfileString(TEXT("Clipper"), TEXT("DefaultListName"), TEXT(""), default_list_name_buf, BUF_SIZE - 1, ini_path.c_str()))
 		LoadString(hInst, IDS_DEFAULT_LIST_NAME, default_list_name_buf, BUF_SIZE - 1);
 	default_list_name = ::utf16_to_utf8(default_list_name_buf);
+
+	// Initialize global variables for clipregex
+	::GetPrivateProfileString(TEXT("clipregex"), TEXT("searchexpr"), TEXT(""), searchbuf, BUF_SIZE - 1, ini_path.c_str());
+	::GetPrivateProfileString(TEXT("clipregex"), TEXT("replaceexpr"), TEXT(""), replacebuf, BUF_SIZE - 1, ini_path.c_str());
 
 	return TRUE;
 }
