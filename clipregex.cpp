@@ -23,6 +23,8 @@ using namespace std;
 // global variables:
 extern HINSTANCE hInst;
 extern wstring ini_path;
+extern TCHAR searchbuf[BUF_SIZE];
+extern TCHAR replacebuf[BUF_SIZE];
 
 TOOL_EXEC_INFO* dlg_tei = nullptr;
 
@@ -67,13 +69,31 @@ __declspec(dllexport) int CALLBACK clipregex(const HWND hWnd, TOOL_EXEC_INFO* te
 	else if ((tei->call_type & CALLTYPE_MENU) || (tei->call_type & CALLTYPE_VIEWER)) {
 		// cmd_line is empty and called from menu or viewer
 
+		// Initialize dlg variables searchexpr and replaceexpr from tool_clip.ini
+		searchexpr.assign(searchbuf);
+		replaceexpr.assign(replacebuf);
+
 		// Show dialog 
 		if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_REPLACE), GetForegroundWindow(), dlg_replace_regex, (LPARAM)0) == FALSE)
 			return TOOL_CANCEL;
 
+		// Save dlg variables searchexpr and replaceexpr back to tool_clip.ini
+		if (wcscmp(searchexpr.c_str(), searchbuf) != 0) {
+			wcscpy_s(searchbuf, searchexpr.c_str());
+			::WritePrivateProfileString(TEXT("clipregex"), TEXT("searchexpr"), searchexpr.c_str(), ini_path.c_str());
+		}
+		if (wcscmp(replaceexpr.c_str(), replacebuf) != 0) {
+			wcscpy_s(replacebuf, replaceexpr.c_str());
+			::WritePrivateProfileString(TEXT("clipregex"), TEXT("replaceexpr"), replaceexpr.c_str(), ini_path.c_str());
+		}
+
 		// and use searchexpr and replaceexpr set by dialog
 		search_expression = searchexpr;
 		replacement = replaceexpr;
+
+		// and set them back to empty
+		searchexpr.clear();
+		replaceexpr.clear();
 	}
 	else
 	{
@@ -118,8 +138,6 @@ __declspec(dllexport) BOOL CALLBACK clipregex_property(const HWND hWnd, TOOL_EXE
 bool init_replace_regex(HWND hDlg, const TOOL_EXEC_INFO* tei = nullptr)
 {
 	wstring s;
-	wstring searchexpr;
-	wstring replaceexpr;
 	if (tei && tei->cmd_line)
 		s.assign(tei->cmd_line);
 
