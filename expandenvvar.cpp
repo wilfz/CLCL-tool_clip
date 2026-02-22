@@ -13,6 +13,7 @@ using namespace std;
 // forward declarations of local functions and classes
 tstring select_macro(const HWND hWnd, const tstring& folder);
 void expand_macros(tstring& s);
+void expand_from_history(const HWND hWnd, tstring& s, tstring clipsel = TEXT(""));
 
 /*
  * expand_envvar_tool
@@ -34,6 +35,10 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 	if (tdi == nullptr || tei == nullptr)
 		return TOOL_ERROR;
 
+	if ((tei->call_type & CALLTYPE_VIEWER) != 0) {
+		return TOOL_ERROR; // not allowed
+	}
+
 	di = tdi->di;
 
 	if (di == nullptr || di->type != TYPE_ITEM && di->type != TYPE_DATA)
@@ -42,7 +47,8 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 	// If command line is given get the macro to be expanded from there.
 	if (tei->cmd_line != nullptr && *tei->cmd_line != TEXT('\0')) {
 		cl_item item(tdi->di);
-		tstring clipboard = item.textcontent;
+		// get the currently selected text
+		tstring clipsel = item.textcontent;
 
 		// Open the template folder and look for a folder named like the command line, 
 		// if it exists, select a macro from there and expand it.
@@ -70,17 +76,12 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 		assert(len == expanded.length() + 1);
 		delete[] tmp;
 
-		// Replace %DATE%, %TIME% with apprpriate strings
+		// Replace %DATE%, and %TIME% with appropriate strings
 		expand_macros(expanded);
 
-		// Now replace all occurences of %CLIPBOARD% with the value of the currrent clipboard
-		size_t p_start;
-		while ((p_start = expanded.find(TEXT("%CLIPBOARD%"))) != tstring::npos) {
-			if (clipboard.length() > 0) {
-				expanded = expanded.substr(0, p_start) + clipboard 
-					+ expanded.substr(p_start + 11);
-			}
-		}
+		// Replace %CLIPSEL% with current selection and
+		// replace %CLIPHIST:n% with the n-th history item.
+		expand_from_history( hWnd, expanded, clipsel);
 
 		len = expanded.length() + 1; // include terminating null
 
@@ -151,6 +152,10 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 		// Replace %DATE%, and %TIME% with apprpriate strings
 		expand_macros(expanded);
 
+		// Replace %CLIPSEL% with current selection and
+		// replace %CLIPHIST:n% with the n-th history item.
+		expand_from_history(hWnd, expanded);
+
 		len = expanded.length() + 1; // include terminating null
 
 		// Copy expanded.c_str() to to_mem
@@ -187,9 +192,40 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 	return ret;
 }
 
+// フォーカス情報
+// focus information
+typedef struct _FOCUS_INFO {
+	HWND active_wnd;
+	HWND focus_wnd;
+	POINT cpos;
+	BOOL caret;
+} FOCUS_INFO;
+
+/*
+ * get_focus_info - フォーカス情報を取得
+ */
+void get_focus_info(FOCUS_INFO* fi)
+{
+	// フォーカスを持つウィンドウの取得
+	// get the window with focus
+	fi->active_wnd = GetForegroundWindow();
+	AttachThreadInput(GetWindowThreadProcessId(fi->active_wnd, NULL), GetCurrentThreadId(), TRUE);
+	fi->focus_wnd = GetFocus();
+	// キャレット位置取得
+	// get caret position
+	if (GetCaretPos(&fi->cpos) == TRUE && (fi->cpos.x > 0 || fi->cpos.y > 0)) {
+		ClientToScreen(fi->focus_wnd, &fi->cpos);
+		fi->caret = TRUE;
+	}
+	else {
+		fi->caret = FALSE;
+	}
+	AttachThreadInput(GetWindowThreadProcessId(fi->active_wnd, NULL), GetCurrentThreadId(), FALSE);
+}
+
 tstring select_macro(const HWND hWnd, const tstring& folder)
 {
-	// Get history_root
+	// Get registry_root
 	DATA_INFO* registry_root = (DATA_INFO*)SendMessage(hWnd, WM_REGIST_GET_ROOT, 0, 0);
 	if (registry_root == nullptr)
 		return tstring();
@@ -218,6 +254,9 @@ tstring select_macro(const HWND hWnd, const tstring& folder)
 	HMENU hMenu = CreatePopupMenu();
 	// this map will contain macros which can be expanded
 	map<unsigned int, tstring> macro;
+	vector<tstring> content;
+	content.reserve(64); // there will be rarely more than 64 macros
+	content.push_back(tstring()); // dummy for 1-based indexing of menu items))
 	unsigned int i = 0;
 
 	// fill menu with the folder items
@@ -230,6 +269,7 @@ tstring select_macro(const HWND hWnd, const tstring& folder)
 		if (mi.title.empty())
 			macro_name = mi.get_textcontent().substr(0, 48);
 		macro[++i] = mi.get_textcontent();
+		content.push_back(mi.get_textcontent());
 		AppendMenu(hMenu, MF_STRING, i, macro_name.c_str());
 	}
 
@@ -239,13 +279,21 @@ tstring select_macro(const HWND hWnd, const tstring& folder)
 		return tstring(); // nothing found
 	}
 
+	FOCUS_INFO fi;
+	get_focus_info(&fi);
+
 	// メニュー表示
 	// Display menu
 	HWND hCurrentWnd = GetForegroundWindow();
 	SetForegroundWindow(hWnd);
 	ShowWindow(hWnd, SW_HIDE);
 	POINT apos;
+	if (fi.caret == TRUE && fi.cpos.x >= 0 && fi.cpos.x < GetSystemMetrics(SM_CXSCREEN)
+				&& fi.cpos.y >= 0 && fi.cpos.y < GetSystemMetrics(SM_CYSCREEN))
+		apos = fi.cpos;
+	else
 	GetCursorPos((LPPOINT)&apos);
+
 	i = TrackPopupMenu(hMenu, TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD, apos.x, apos.y, 0, hWnd, NULL);
 	DestroyMenu(hMenu);
 	SetForegroundWindow(hCurrentWnd);
@@ -255,6 +303,7 @@ tstring select_macro(const HWND hWnd, const tstring& folder)
 
 	// after all this is the text content to be expanded
 	return macro[i];
+	// return content[i];
 }
 
 // Replace %DATE%, and %TIME% with apprpriate strings
@@ -341,6 +390,102 @@ void expand_macros(tstring& s)
 		if (len_dt > 0) {
 			s = s.substr(0, p_start) + tstring(time) + s.substr(p_end + 1);
 		}
+	}
+
+	return;
+}
+
+// Helper function to check if a string is a number (integer)
+bool is_number(const TCHAR* str) {
+	if (str == nullptr || *str == TEXT('\0'))
+		return false;
+	const TCHAR* p = str;
+	// Optional: allow negative numbers
+	if (*p == TEXT('-')) ++p;
+	while (*p) {
+		if (*p < TEXT('0') || *p > TEXT('9'))
+			return false;
+		++p;
+	}
+	return true;
+}
+
+// Helper function: read the n newest tetxt items from clipboard history
+bool read_from_history(const HWND hWnd, vector<tstring>& hist_content, size_t n) {
+	// Get registry_root
+	DATA_INFO* registry_root = (DATA_INFO*)SendMessage(hWnd, WM_HISTORY_GET_ROOT, 0, 0);
+	if (registry_root == nullptr)
+		return false;
+
+	// otherwise iterate to the n-th element of history and get its content
+	unsigned int i = 0; // first history item is 0, is the current selection
+	DATA_INFO* di;
+	for (di = registry_root->child; di != nullptr; di = di->next, i++) {
+		if (i < hist_content.size())
+			continue; // we already have that one in hist_content
+
+		if (di->type != TYPE_ITEM) {
+			hist_content.push_back(tstring()); // not a text item, append empty string
+			continue;
+		}
+
+		cl_item hi(di);
+		hist_content.push_back(hi.get_textcontent());
+
+		if (i == n) {
+			// Usually only the most recent hisory items are of interest,
+			// no need to iterate further if we have already found the requested n-th item
+			return true;
+		}
+	}
+
+	return false;
+}
+
+// Replace %CLIPBOARD% with the previous clipboard content
+// %CLIPSEL% with the current selection and 
+// all occurences of %CLIPHIST:n% with the content of the n-th newest item in history.
+void expand_from_history(const HWND hWnd, tstring& s, tstring clipsel) {
+	vector<tstring> hist_content;
+	size_t p_start, p_end = 0;
+	// Now replace all occurences of %CLIPBOARD% with the 2nd history item, the one with index 1.
+	// The most recent history item with index 0 is the current selection.
+	while ((p_start = s.find(TEXT("%CLIPBOARD%"), p_end)) != tstring::npos) {
+		if (!read_from_history( hWnd, hist_content, 1))
+			break; // could not read 1st history item, leave %CLIPBOARD% as it is
+		tstring clipboard = hist_content[1];
+		s = s.substr(0, p_start) + clipboard + s.substr(p_start + 11);
+		p_end = p_start + clipboard.length() + 1;
+	}
+
+	p_start = p_end = 0;
+	while ((p_start = s.find(TEXT("%CLIPSEL%"), p_end)) != tstring::npos) {
+		s = s.substr(0, p_start) + clipsel + s.substr(p_start + 9);
+		p_end = p_start + clipsel.length() + 1;
+	}
+
+	p_start = p_end = 0;
+	while ((p_start = s.find(TEXT("%CLIPHIST:"), p_end)) != tstring::npos
+		&& (p_end = s.find(TEXT("%"), p_start + 10)) != tstring::npos) {
+
+		tstring n_str = s.substr(p_start + 10, p_end - p_start - 10);
+		tstring repl;
+		long n = 0;
+		if (n_str.empty() || !is_number(n_str.c_str()) || (n = _tstol(n_str.c_str())) < 0) {
+			p_end++;
+			continue;
+		}
+
+		// is n not within hist_content?
+		// Otherwise iterate to the n-th element of history and fill hist_content up to n, if possible.
+		if (n >= (long)hist_content.size() && !read_from_history(hWnd, hist_content, n)) {
+			p_end++;
+			continue; // could not read n-th history item
+		}
+
+		repl = hist_content[n];
+		s = s.substr(0, p_start) + repl + s.substr(p_end + 1);
+		p_end = p_start + repl.length() + 1;
 	}
 
 	return;
