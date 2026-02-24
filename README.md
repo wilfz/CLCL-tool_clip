@@ -16,31 +16,43 @@ Currently it contains the following features for clipboard items:
 
 To be continued ...
 
-## Macros
-The new feature of macros (insertion of template with expanded environment variables, date, time, etc.) is not as self-explaining as most other features in this plugin and needs some explanation:
-
-### Installation:
+## Installation:
 - Close any active CLCL instance.
 - Copy `tool_clip.dll` (preferably) into the CLCL folder `C:\Program Files (x86)\CLCL` or alternatively install with `setup_too_clip.exe`.
 
-### Configuration:
+## Features
+
+### Macros
+The new feature of macros (insertion of template with expanded environment variables, date, time, etc.) is not as self-explaining as most other features in this plugin and needs some explanation:
+
+#### Configuration:
 - Start CLCL and open the options. 
 - Go to the `Tools` tab, and click the `Add` button.
-- Add the `tool_clip.dll` and select the "Expand Macro" (`expand_envvar`) function
-- In `Command line` add the name of your macro folder e.g. _Macros_.
+- Add the `tool_clip.dll` and select the "Expand Macro" (`expand_envvar`) function  
+![add toolclip](img/add_expand_macros.png)
+- In `Command line` add the name of your macro folder e.g. _Macros_.  
+![cmdline_and hitkey](img/cmdline_and_hotkey.png)
 - If you want to access your macros easily, you can set a hotkey, e.g. `Alt-M`.
-- You can also add the Macro tool to any menu of your choice in the `Action` tab.
+- You can also add the Macro tool to any menu of your choice in the `Action` tab.  
+![add_to_menu](img/add_to_menu.png)
 - Open CLCL viewer and select the `Template` node.
 - Add a folder in the first tier below the `Template` node with the name from above, e.g. _Macros_.  
-It is __essential__, that the folder bears the exact name (case-sensitive) as specified in `command line` of the tool and is located directly in `Templates` and not in any subfolder
-- Now you are ready to create your macros as items with Unicode format in that folder.
-- Text macros can contain any environment variable, enclosed in percent symbols, e.g. `%USERNAME%`, `%COMPUTERNAME%` etc.
+![create_folder_macros](img/create_folder.png)
+It is __essential__, that the folder bears the exact name (case-sensitive) as specified in `command line` of the tool and is located directly in `Templates` and not in any subfolder.  
+![folder_name](img/named_macros.png)
+- Now you are ready to create your macros as items with __Unicode format__ in that folder.
+- Text macros can contain any environment variable, enclosed in percent symbols, e.g. `%USERNAME%`, `%COMPUTERNAME%` etc.  
+![example](img/some_macro.png)
 - `%DATE%`, and `%TIME%` will be expanded according to your locale settings, but format can be specified explicitly behind a colon, but within the percent brackets.  
 Format must conform to Microsoft's [date specification](https://learn.microsoft.com/en-us/windows/win32/intl/day--month--year--and-era-format-pictures) and [time specification](https://learn.microsoft.com/en-us/windows/win32/api/datetimeapi/nf-datetimeapi-gettimeformatex), e.g. `%DATE:dddd, d MMMM, yyyy%` or `%TIME:hh:mm:ss%`
 
-### Usage:
-- While editimg text, invoke the `Tools` popup menu, and choose `Expand Macro`. A new popup menu will appear that contains the items of your _Macros_ folder.
-- Choose a macro, and it will immediately be expanded and inserted at your current text cursor position.
+#### Usage:
+- While editimg text, invoke the `Tools` popup menu, and choose `Expand Macro`.  
+![popup_tool_menu](img/popup_menu.png)
+A new popup menu will appear that contains the items of your _Macros_ folder.  
+![popup_macros](img/popup_macros.png)
+- Choose a macro, and it will immediately be expanded and inserted at your current text cursor position.  
+![inserted_text](img/inserted_text.png)
 - If you configured a hotkey, e.g. `Alt-M` you can use that as a shortcut to the _Macros_ popup menu.
 - If your macro contains `%CLIPBOARD%` this will be expanded to the content of your clipboard prior to invocation of the popup menu. But attention: Even if you cancel the action without choosing from the popup, your clipboard content will be altered!
 
