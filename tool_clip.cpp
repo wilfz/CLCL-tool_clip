@@ -27,6 +27,8 @@ string default_list_name;
 TCHAR searchbuf[BUF_SIZE];
 TCHAR replacebuf[BUF_SIZE];
 
+int expand_all;
+
 
 // wstring -> u16string -> string (utf8)
 std::string utf16_to_utf8(const std::wstring& utf16);
@@ -153,7 +155,7 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 		LoadString(hInst, IDS_EXPAND_MACROS, tgi->title, BUF_SIZE - 1);
 		lstrcpy(tgi->func_name, TEXT("expand_envvar"));
 		lstrcpy(tgi->cmd_line, TEXT(""));
-		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE;
+		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE | CALLTYPE_ITEM_TO_CLIPBOARD;
 		return TRUE;
 	}
 	return FALSE;
@@ -236,6 +238,15 @@ static BOOL dll_initialize(void)
 	// Initialize global variables for clipregex
 	::GetPrivateProfileString(TEXT("clipregex"), TEXT("searchexpr"), TEXT(""), searchbuf, BUF_SIZE - 1, ini_path.c_str());
 	::GetPrivateProfileString(TEXT("clipregex"), TEXT("replaceexpr"), TEXT(""), replacebuf, BUF_SIZE - 1, ini_path.c_str());
+
+	// Initialize global variable for expand_macros; the default is 0 and should be written when entry not yet exists
+	expand_all = ::GetPrivateProfileInt(TEXT("Macros"), TEXT("expand_all"), -1, ini_path.c_str());
+	if (expand_all == -1) {
+		// default value if not set in ini
+		expand_all = 0;
+		::WritePrivateProfileString(TEXT("Macros"), TEXT("expand_all"), 
+			expand_all ? TEXT("1") : TEXT("0"), ini_path.c_str());
+	}
 
 	return TRUE;
 }

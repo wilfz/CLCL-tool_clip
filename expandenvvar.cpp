@@ -10,12 +10,13 @@
 
 using namespace std;
 
+// global variables:
+extern int expand_all;
+
 // forward declarations of local functions and classes
 tstring select_macro(const HWND hWnd, const tstring& folder);
 void expand_macros(tstring& s, bool withenvvar);
 void expand_from_history(const HWND hWnd, tstring& s, tstring clipsel = TEXT(""));
-
-bool expand_all = false;
 
 /*
  * expand_envvar_tool
@@ -34,15 +35,21 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 	DATA_INFO* di;
 	int ret = TOOL_SUCCEED;
 
+	if (tdi == nullptr || tei == nullptr)
+		return TOOL_ERROR;
+
 	// If "When data is send to the clipboard" is checked and it is that call type
-	// we are less strict about tei and tdi and simply return TOOL_SUCCEED in most cases,
-	// except when tdi->di comes from the macro folder
-	if ((tei->call_type & CALLTYPE_ITEM_TO_CLIPBOARD) != 0) {
+	// we are less strict about tei and tdi and simply return TOOL_SUCCEED in many cases.
+	// There may be other tools that are subscribed to this call type
+	if (tei && (tei->call_type & CALLTYPE_ITEM_TO_CLIPBOARD) != 0) {
 		// return TOOL_SUCCEED for everything that is of no concern for us
-		if (tdi == nullptr || tei == nullptr)
+		if (tdi == nullptr || tdi->di == nullptr)
 			return TOOL_SUCCEED; // just ignore
 
 		cl_item item(tdi->di);
+		if (item.find_format(CF_UNICODETEXT) == nullptr && item.find_format(CF_TEXT) == nullptr)
+			return TOOL_SUCCEED; // just ignore
+
 		tstring macro = item.textcontent;
 
 		if (macro.empty())
@@ -60,6 +67,7 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 			::CloseClipboard();
 		}
 
+		// Do not expand real environment variables unless especially configured to do so.
 		if (expand_all) {
 			// Just find out the size of memory to be allocated in the next call.
 			DWORD len = ::ExpandEnvironmentStrings(macro.c_str(), NULL, 0);
@@ -81,20 +89,23 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 		else {
 			expanded = macro; // no environment variable expansion, just macro expansion
 			// This allows to use environment variables in templates without them being expanded 
-			// when sent to cliüpboard.
+			// when sent to clipboard.
 		}
 
 		// Replace %DATE:{format}%, and %TIME:{format}% with formatted date/time
-		expand_macros(expanded, expand_all);
+		expand_macros(expanded, (bool) expand_all);
 
-		// Replace %CLIPBOARD% with current selection and
+		// Replace all occurences of %CLIPBOARD% with current clipboard.
 		size_t p_start, p_end = 0;
-		// Now replace all occurences of %CLIPBOARD% with the 2nd history item, the one with index 1.
-		// The most recent history item with index 0 is the current selection.
 		while ((p_start = expanded.find(TEXT("%CLIPBOARD%"), p_end)) != tstring::npos) {
 			expanded = expanded.substr(0, p_start) + clipboard + expanded.substr(p_start + 11);
 			p_end = p_start + clipboard.length() + 1;
 		}
+
+		// Replace %CLIPHIST:n% with the n-th history item.
+		// There is no %CLIPSEL%, current Clipboard is in %CLIPHIST:0%
+		// and will remain there.
+		expand_from_history(hWnd, expanded);
 
 		item.set_textcontent(expanded);
 
@@ -103,9 +114,6 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 
 		return ret;
 	}
-
-	if (tdi == nullptr || tei == nullptr)
-		return TOOL_ERROR;
 
 	if ((tei->call_type & CALLTYPE_VIEWER) != 0) {
 		return TOOL_ERROR; // not allowed
@@ -153,6 +161,8 @@ __declspec(dllexport) int CALLBACK expand_envvar(const HWND hWnd, TOOL_EXEC_INFO
 
 		// Replace %CLIPSEL% with current selection and
 		// replace %CLIPHIST:n% with the n-th history item.
+		// Current selection is already in clipboard and %CLIPHIST:0% 
+		// the old Clipboard is already in %CLIPHIST:1%
 		expand_from_history( hWnd, expanded, clipsel);
 
 		len = expanded.length() + 1; // include terminating null
@@ -397,6 +407,7 @@ void expand_macros(tstring& s, bool withenvvar)
 
 	size_t p_start, p_end;
 	// Replace all occurences of %DATE% with the default format for dates.
+	// If envvar is false do not enter the loop at all.
 	while (withenvvar && (p_start = s.find(TEXT("%DATE%"))) != tstring::npos) {
 		if (len_dt > 0) {
 			s = s.substr(0, p_start) + tstring(date) + s.substr(p_start + 6);
@@ -437,6 +448,7 @@ void expand_macros(tstring& s, bool withenvvar)
 	);
 
 	// Replace all occurences of %TIME% with the default format for time.
+	// If envvar is false do not enter the loop at all.
 	while (withenvvar && (p_start = s.find(TEXT("%TIME%"))) != tstring::npos) {
 		if (len_dt > 0) {
 			s = s.substr(0, p_start) + tstring(time) + s.substr(p_start + 6);
