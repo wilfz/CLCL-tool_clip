@@ -31,7 +31,7 @@ The new feature of macros (insertion of template with expanded environment varia
 - Add the `tool_clip.dll` and select the "Expand Macro" (`expand_envvar`) function  
 ![add toolclip](img/add_expand_macros.png)
 - In `Command line` add the name of your macro folder e.g. _Macros_.  
-![cmdline_and hitkey](img/cmdline_and_hotkey.png)
+![cmdline_and hotkey](img/cmdline_and_hotkey.png)
 - If you want to access your macros easily, you can set a hotkey, e.g. `Alt-M`.
 - You can also add the Macro tool to any menu of your choice in the `Action` tab.  
 ![add_to_menu](img/add_to_menu.png)
@@ -44,7 +44,7 @@ It is __essential__, that the folder bears the exact name (case-sensitive) as sp
 - Text macros can contain any environment variable, enclosed in percent symbols, e.g. `%USERNAME%`, `%COMPUTERNAME%` etc.  
 ![example](img/some_macro.png)
 - `%DATE%`, and `%TIME%` will be expanded according to your locale settings, but format can be specified explicitly behind a colon, but within the percent brackets.  
-Format must conform to Microsoft's [date specification](https://learn.microsoft.com/en-us/windows/win32/intl/day--month--year--and-era-format-pictures) and [time specification](https://learn.microsoft.com/en-us/windows/win32/api/datetimeapi/nf-datetimeapi-gettimeformatex), e.g. `%DATE:dddd, d MMMM, yyyy%` or `%TIME:hh:mm:ss%`
+Format must conform to Microsoft's [date specification](https://learn.microsoft.com/en-us/windows/win32/intl/day--month--year--and-era-format-pictures) and [time specification](https://learn.microsoft.com/en-us/windows/win32/api/datetimeapi/nf-datetimeapi-gettimeformatex), e.g. `%DATE:dddd, d MMMM, yyyy%`  or  `%TIME:hh:mm:ss%`
 
 #### Usage:
 - While editing text, invoke the `Tools` popup menu, and choose `Expand Macro`.  
@@ -55,8 +55,10 @@ A new popup menu will appear that contains the items of your _Macros_ folder.
 ![inserted_text](img/inserted_text.png)
 - If you configured a hotkey, e.g. `Alt-M` you can use that as a shortcut to the _Macros_ popup menu.
 - If your macro contains `%CLIPBOARD%` this will be expanded to the content of your clipboard prior to invocation of the popup menu. But attention: Even if you cancel the action without choosing from the popup, your clipboard content will be altered!
-- When you invoke CLCL menu or a CLCL hotkey to insert an item directly from templates or history, the macro variables `%DATE:{format}%`, `%TIME:{format}%` and `%CLIPBOARD%` within the item are always expanded before pasting, no matter whether the item is located in the "Macros" folder or anywhere else in templates or history.  
-To extend this immediate expansion to ordinary environment variables as well, set "expand_all" in tool_clip.ini to 1. The drawback is, that so it is not possible anymore to insert environment variables literally (without expanding) from templates.  
+- If you invoke CLCL menu or a CLCL hotkey to insert an item __directly__ from templates or history, only the macro variables `%DATE:{format}%`, `%TIME:{format}%` and `%CLIPBOARD%` within the item are always expanded before pasting, no matter whether the item is located in the "Macros" folder or anywhere else in templates or history.  
+To have this immediate expansion for ordinary environment variables as well, set `expand_all=1` in section `[Macros]` of configuration file `tool_clip.ini`:  
+![expand_all](img/macros_expand_all.png)  
+The drawback however is, that so it is not possible anymore to insert environment variables literally (without expanding) from templates.  
 You can avoid this "immediate expansion" completely, even for the special macro variables mentioned above, just uncheck "When data is sent to clipboard" in the tool's configuration.
 
 
