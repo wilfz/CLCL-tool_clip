@@ -9,7 +9,7 @@ Currently it contains the following features for clipboard items:
 - replace with regular expressions
 - replace tabstops and/or sequences of spaces by a character string of choice
 - convert tab separated data into an html table snippet, ready to insert into an email, OneNote, etc.
-- macros, expand variables before inserting items
+- macros, insert templates with expanded variables
 - send menu item to clipboard
 - show currently selected item in viewer
 - save CLCL templates to and load from an ODBC database 
@@ -23,7 +23,7 @@ To be continued ...
 ## Features
 
 ### Macros
-The new feature of macros (insertion of template with expanded environment variables, date, time, etc.) is very powerful but not as self-explaining as most other features in this plugin and needs some explanation:
+The new feature of macros (insertion of template with expanded environment variables, date, time, etc.) is not as self-explaining as most other features in this plugin and needs some explanation:
 
 #### Configuration:
 - Start CLCL and open the options. 
@@ -62,7 +62,7 @@ You can avoid this "immediate expansion" completely, even for the special macro 
 
 
 ## Update history
-- Ver 1.0.2.0 -> 
+- Ver 1.0.2.0 -> 1.0.3.0
 	- Features:
 		- Macros, expansion of variables in templates
 		- preserve regex expression from the previous call
