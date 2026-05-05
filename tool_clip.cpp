@@ -186,10 +186,10 @@ static BOOL dll_initialize(void)
 	*r = TEXT('\0');
 
 	UINT portable = 0;
-	tstring clcl_ini_path = linguversa::string_format(TEXT("%s\\%s"), app_path, TEXT("clcl.ini"));
+	tstring clcl_ini_path = linguversa::string_format(TEXT("%s\\%s"), app_path, TEXT("clcl_app.ini"));
 	tstring ini_dir;
 	if (::PathFileExists(clcl_ini_path.c_str()) == TRUE) {
-		portable = ::GetPrivateProfileInt(TEXT("GENERAL"), TEXT("GENERAL"), 0, clcl_ini_path.c_str());
+		portable = ::GetPrivateProfileInt(TEXT("GENERAL"), TEXT("portable"), 0, clcl_ini_path.c_str());
 	}
 	if (portable == 1) {
 		// locate tool_clip.ini in the same folder as clcl.ini besides clcl.exe
