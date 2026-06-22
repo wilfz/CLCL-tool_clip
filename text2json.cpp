@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "clipitem.h"
 #include "clipper.h"
+#include "string.h"
 #include "query\lvstring.h"
 
 #include <fstream>

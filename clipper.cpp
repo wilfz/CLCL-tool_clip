@@ -1,6 +1,7 @@
 #include <fstream>
 #include "clipper.h"
 #include "clipitem.h"
+#include "string.h"
 #include "nlohmann/json.hpp"
 #include "streamindent.h"
 
