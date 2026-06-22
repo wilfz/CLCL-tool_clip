@@ -25,3 +25,5 @@ EXPORTS
 	clipregex_property
 
 	expand_envvar
+
+	exec_cmd

@@ -749,24 +749,3 @@ bool TimestampStructToFileTime(const TIMESTAMP_STRUCT ts, FILETIME& ft)
 	return false;
 }
 
-
-// The following 2 functions are from
-// https://gist.github.com/gchudnov/c1ba72d45e394180e22f
-
-// string (utf8) -> u16string -> wstring
-wstring utf8_to_utf16(const string& utf8)
-{
-	wstring_convert<codecvt_utf8_utf16<char16_t>, char16_t> convert;
-	u16string utf16 = convert.from_bytes(utf8);
-	wstring wstr(utf16.begin(), utf16.end());
-	return wstr;
-}
-
-// wstring -> u16string -> string (utf8)
-string utf16_to_utf8(const wstring& utf16) {
-	u16string u16str(utf16.begin(), utf16.end());
-	wstring_convert<codecvt_utf8_utf16<char16_t>, char16_t> convert;
-	string utf8 = convert.to_bytes(u16str);
-	return utf8;
-}
-

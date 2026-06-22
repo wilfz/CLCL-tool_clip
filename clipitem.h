@@ -6,8 +6,13 @@
 #include <sqltypes.h>
 
 
-const wchar_t format_unicode[] = L"UNICODE TEXT";
-const wchar_t format_multibyte[] = L"TEXT";
+const TCHAR format_unicode[] = TEXT("UNICODE TEXT");
+const TCHAR format_multibyte[] = TEXT("TEXT");
+#ifdef UNICODE
+const TCHAR format_textdefault[] = TEXT("UNICODE TEXT");
+#else
+const TCHAR format_textdefault[] = TEXT("TEXT");
+#endif
 
 class clip_item
 {
@@ -160,9 +165,3 @@ bool FileTimeToSystemTimeCL(const FILETIME& ft, SYSTEMTIME& st);
 bool SystemTimeToFileTimeCL(const SYSTEMTIME& st, FILETIME& ft);
 bool FileTimeToTimestampStruct(const FILETIME ft, TIMESTAMP_STRUCT& ts);
 bool TimestampStructToFileTime(const TIMESTAMP_STRUCT ts, FILETIME& ft);
-
-// string (utf8) -> u16string -> wstring
-std::wstring utf8_to_utf16(const std::string& utf8);
-
-// wstring -> u16string -> string (utf8)
-std::string utf16_to_utf8(const std::wstring& utf16);

@@ -12,6 +12,7 @@
 #define _INC_STRING_H
 
 /* Include Files */
+#include <string>
 
 /* Define */
 #ifdef UNICODE
@@ -38,6 +39,11 @@
 #define char_to_tchar(buf, wret, len)	(lstrcpyn(wret, buf, len + 1))
 #endif
 
+// string (utf8) -> u16string -> wstring
+std::wstring utf8_to_utf16(const std::string& utf8);
+
+// wstring -> u16string -> string (utf8)
+std::string utf16_to_utf8(const std::wstring& utf16);
 
 /* Struct */
 
