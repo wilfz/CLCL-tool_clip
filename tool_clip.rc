@@ -156,7 +156,7 @@ END
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 1,0,3,0
- PRODUCTVERSION 1,0,3,0
+ PRODUCTVERSION 1,0,3
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -178,7 +178,7 @@ BEGIN
             VALUE "LegalCopyright", "Copyright (C) 2024-2026 MIT License"
             VALUE "OriginalFilename", "tool_clip.dll"
             VALUE "ProductName", "ToolClip Plugin for CLCL"
-            VALUE "ProductVersion", "1.0.3.0"
+            VALUE "ProductVersion", "1.0.3"
         END
     END
     BLOCK "VarFileInfo"

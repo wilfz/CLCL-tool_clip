@@ -157,6 +157,14 @@ __declspec(dllexport) BOOL CALLBACK get_tool_info_w(const HWND hWnd, const int i
 		lstrcpy(tgi->cmd_line, TEXT(""));
 		tgi->call_type = CALLTYPE_MENU | CALLTYPE_MENU_COPY_PASTE | CALLTYPE_ITEM_TO_CLIPBOARD;
 		return TRUE;
+
+	case 11:
+		lstrcpy(tgi->title, TEXT("Run External Program"));
+		//LoadString(hInst, IDS_XXX, tgi->title, BUF_SIZE - 1);
+		lstrcpy(tgi->func_name, TEXT("exec_cmd"));
+		lstrcpy(tgi->cmd_line, TEXT(""));
+		tgi->call_type = CALLTYPE_MENU | CALLTYPE_VIEWER;
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -300,6 +308,52 @@ __declspec(dllexport) int CALLBACK show_in_viewer(const HWND hWnd, TOOL_EXEC_INF
 	//SendMessage(hWnd, WM_HISTORY_CHANGED, 0, 0);
 
 	return TOOL_SUCCEED;
+}
+
+/*
+ * execute external command
+ */
+__declspec(dllexport) int CALLBACK exec_cmd(const HWND hWnd, TOOL_EXEC_INFO* tei, TOOL_DATA_INFO* tdi)
+{
+	if (tei->cmd_line != nullptr && *tei->cmd_line != TEXT('\0')) {
+		// cmd must be quoted as a whole, otherwise it will not be interpreted correctly 
+		// if the name of the executable and/or one of the arguments are quoted
+		wstring cmd = L"\"" + wstring(tei->cmd_line);
+		cmd += L"\"";
+
+		int ret = _wsystem(cmd.c_str());
+		if (ret == 0 || ret == -1) {
+			// potential error
+			switch (errno) {
+			case 0:
+				// No error.
+				return TOOL_SUCCEED;
+				break;
+			case E2BIG:
+				// The argument list (which is system-dependent) is too large.
+				return TOOL_ERROR;
+			case ENOENT:
+				// The command interpreter can't be found.
+				return TOOL_ERROR;
+			case ENOEXEC:
+				// The command-interpreter file can't be executed because the format isn't valid.
+				return TOOL_ERROR;
+			case ENOMEM:
+				// Not enough memory is available to execute command; 
+				// or available memory has been corrupted; or a non - valid block exists, 
+				// which indicates that the calling process has been allocated incorrectly.
+				return TOOL_ERROR;
+			default:
+				// An error occurred, but the cause is unknown.
+				return TOOL_ERROR;
+				break;
+			}
+		}
+		return TOOL_SUCCEED;
+	}
+
+	// If no command line is given, it is apparently an invalid configuration.
+	return TOOL_ERROR;
 }
 
 /* End of source */
