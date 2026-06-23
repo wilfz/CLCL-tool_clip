@@ -316,40 +316,60 @@ __declspec(dllexport) int CALLBACK show_in_viewer(const HWND hWnd, TOOL_EXEC_INF
 __declspec(dllexport) int CALLBACK exec_cmd(const HWND hWnd, TOOL_EXEC_INFO* tei, TOOL_DATA_INFO* tdi)
 {
 	if (tei->cmd_line != nullptr && *tei->cmd_line != TEXT('\0')) {
-		// cmd must be quoted as a whole, otherwise it will not be interpreted correctly 
-		// if the name of the executable and/or one of the arguments are quoted
-		wstring cmd = L"\"" + wstring(tei->cmd_line);
-		cmd += L"\"";
-
-		int ret = _wsystem(cmd.c_str());
-		if (ret == 0 || ret == -1) {
-			// potential error
-			switch (errno) {
-			case 0:
-				// No error.
-				return TOOL_SUCCEED;
-				break;
-			case E2BIG:
-				// The argument list (which is system-dependent) is too large.
+		// Just find out the size of memory to be allocated in the next call.
+		DWORD len = ::ExpandEnvironmentStrings(tei->cmd_line, NULL, 0);
+		if (len <= 0) {
 				return TOOL_ERROR;
-			case ENOENT:
-				// The command interpreter can't be found.
-				return TOOL_ERROR;
-			case ENOEXEC:
-				// The command-interpreter file can't be executed because the format isn't valid.
-				return TOOL_ERROR;
-			case ENOMEM:
-				// Not enough memory is available to execute command; 
-				// or available memory has been corrupted; or a non - valid block exists, 
-				// which indicates that the calling process has been allocated incorrectly.
-				return TOOL_ERROR;
-			default:
-				// An error occurred, but the cause is unknown.
-				return TOOL_ERROR;
-				break;
-			}
 		}
+
+		TCHAR* cmd_line = new TCHAR[len + 1];
+		if (cmd_line == nullptr) {
+				return TOOL_ERROR;
+			}
+		// Second call: now we have the target buffer alocated and can do the real expansion.
+		len = ::ExpandEnvironmentStrings(tei->cmd_line, cmd_line, len);
+		if (len <= 0) {
+			delete[] cmd_line;
+			return TOOL_ERROR;
+		}
+
+		STARTUPINFO si;
+		PROCESS_INFORMATION pi;
+
+		ZeroMemory(&si, sizeof(si));
+		si.cb = sizeof(si);
+		ZeroMemory(&pi, sizeof(pi));
+
+		// IMPORTANT: CreateProcess requires a modifiable array.
+		// We already copied the string including the null terminator '\0'
+		// to a local variable cmd_line.
+
+		// Start the process with the complete command line
+		// (executable path and command line parameters)
+		BOOL success = CreateProcess(
+			NULL,                   // lpApplicationName (NULL, because the path is cmd_line)
+			cmd_line,				// lpCommandLine (Pointer to a writable buffer)
+			NULL,                   // lpProcessAttributes
+			NULL,                   // lpThreadAttributes
+			FALSE,                  // bInheritHandles
+			0,                      // dwCreationFlags
+			NULL,                   // lpEnvironment
+			NULL,                   // lpCurrentDirectory
+			&si,                    // lpStartupInfo
+			&pi                     // lpProcessInformation
+		);
+
+		if (success) {
+			// Close handles immediately, because we do not wait for the process to end
+			CloseHandle(pi.hProcess);
+			CloseHandle(pi.hThread);
+			delete[] cmd_line;
 		return TOOL_SUCCEED;
+		}
+		else {
+			delete[] cmd_line;
+			return TOOL_ERROR;
+		}
 	}
 
 	// If no command line is given, it is apparently an invalid configuration.
