@@ -3,16 +3,17 @@
 ## What is this?
 tool_clip is not a standalone program but an extension to Mr. Tomoaki's great CLCL clipboard tool (newest release and sourcecode: https://github.com/wilfz/CLCL).
 Currently it contains the following features for clipboard items:
-- export items and template folders to json file
-- import text items and folders from json file and merge them into template folders
-- export to and import from android app "Clipper"
-- replace with regular expressions
-- replace tabstops and/or sequences of spaces by a character string of choice
-- convert tab separated data into an html table snippet, ready to insert into an email, OneNote, etc.
-- macros, insert templates with expanded variables
-- send menu item to clipboard
-- show currently selected item in viewer
-- save CLCL templates to and load from an ODBC database 
+- Replace tabstops and/or sequences of spaces by a character string of choice
+- Replace with regular expressions
+- Export items and template folders to json file
+- Import text items and folders from json file and merge them into template folders
+- Export to and import from the Android app [Clipper](https://play.google.com/store/apps/details?id=org.rojekti.clipper) / [Clipper+](https://play.google.com/store/apps/details?id=fi.rojekti.clipper)
+- Run External Program
+- Convert tab separated data into an html table snippet, ready to insert into an email, OneNote, etc.
+- Macros, insert templates with expanded variables
+- Send menu item to clipboard
+- Show currently selected item in viewer
+- Save CLCL templates to and load from an ODBC database 
 
 To be continued ...
 
@@ -64,6 +65,12 @@ You can avoid this "immediate expansion" completely, even for the special macro 
 
 
 ## Update history
+- Ver 1.0.3 -> 1.0.4
+	- Feature:
+		- new plugin function "Run External Program"
+	- Bugfix:
+		- fixed memory leak
+
 - Ver 1.0.2.0 -> 1.0.3.0
 	- Features:
 		- Macros, expansion of variables in templates
